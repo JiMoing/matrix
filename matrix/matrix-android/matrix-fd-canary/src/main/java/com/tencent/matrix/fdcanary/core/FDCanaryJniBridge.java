@@ -46,25 +46,6 @@ public class FDCanaryJniBridge {
         sOnIssuePublishListener = listener;
 
         try {
-            //set config
-            if (config != null) {
-                if (config.isDetectFileIOInMainThread()) {
-                    enableDetector(DetectorType.MAIN_THREAD_IO);
-                    // ms to μs
-                    setConfig(ConfigKey.MAIN_THREAD_THRESHOLD, config.getFileMainThreadTriggerThreshold() * 1000L);
-                }
-
-                if (config.isDetectFileIOBufferTooSmall()) {
-                    enableDetector(DetectorType.SMALL_BUFFER);
-                    setConfig(ConfigKey.SMALL_BUFFER_THRESHOLD, config.getFileBufferSmallThreshold());
-                }
-
-                if (config.isDetectFileIORepeatReadSameFile()) {
-                    enableDetector(DetectorType.REPEAT_READ);
-                    setConfig(ConfigKey.REPEAT_READ_THRESHOLD, config.getFileRepeatReadThreshold());
-                }
-            }
-
             //hook
             doHook();
 
@@ -158,8 +139,6 @@ public class FDCanaryJniBridge {
         static final int SMALL_BUFFER_THRESHOLD = 1;
         static final int REPEAT_READ_THRESHOLD = 2;
     }
-
-    private static native void setConfig(int key, long val);
 
     private static native boolean doHook();
 

@@ -88,8 +88,6 @@ namespace fdcanary {
     private:
         constexpr static const int kContinualThreshold = 8*1000;//in μs， half of 16.6667
 
-        void CountRWInfo(int fd, const FileOpType& file_op_type, long op_size, long rw_cost);
-
         std::unordered_map<int, std::shared_ptr<FDInfo>> info_map_;
     };
 }

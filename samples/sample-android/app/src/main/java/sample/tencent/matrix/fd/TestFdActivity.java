@@ -30,14 +30,11 @@ import android.widget.Toast;
 
 import com.tencent.matrix.Matrix;
 import com.tencent.matrix.fdcanary.FDCanaryPlugin;
-import com.tencent.matrix.iocanary.IOCanaryPlugin;
-import com.tencent.matrix.iocanary.core.IOCanaryJniBridge;
 import com.tencent.matrix.fdcanary.core.FDCanaryJniBridge;
 import com.tencent.matrix.plugin.Plugin;
 import com.tencent.matrix.util.MatrixLog;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,13 +45,8 @@ import sample.tencent.matrix.R;
 import sample.tencent.matrix.issue.IssueFilter;
 
 
-/**
- * @author liyongjie
- * Created by liyongjie on 2017/6/9.
- */
-
 public class TestFdActivity extends Activity {
-    private static final String TAG = "Matrix.TestIoActivity";
+    private static final String TAG = "Matrix.TestFDActivity";
     private static final int EXTERNAL_STORAGE_REQ_CODE = 0x1;
 
     private List<AlertDialog> dialogs = new ArrayList<>();
@@ -106,6 +98,8 @@ public class TestFdActivity extends Activity {
             testSocket();
         } else if (v.getId() == R.id.dump) {
             FDCanaryJniBridge.dumpFdInfo();
+        } else if (v.getId() == R.id.write) {
+            writeSth();
         }
     }
 
@@ -127,7 +121,7 @@ public class TestFdActivity extends Activity {
                     }).setNegativeButton("DUMP", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
-                    IOCanaryJniBridge.dumpFdInfo();
+                    FDCanaryJniBridge.dumpFdInfo();
                 }
             });
             AlertDialog dialog = builder.create();
@@ -136,8 +130,27 @@ public class TestFdActivity extends Activity {
         }
     }
 
+    private void writeSth() {
+        try {
+            File f = new File("/sdcard/a.txt");
+            if (f.exists()) {
+                f.delete();
+            }
+            byte[] data = new byte[4096];
+            for (int i = 0; i < data.length; i++) {
+                data[i] = 'a';
+            }
+            FileOutputStream fos = new FileOutputStream(f);
+            for (int i = 0; i < 10; i++) {
+                fos.write(data);
+            }
 
-    public void toastStartTest(String val) {
-        Toast.makeText(this, "starting io -> " + val + " test", Toast.LENGTH_SHORT).show();
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

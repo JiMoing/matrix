@@ -24,7 +24,7 @@
 #include <assert.h>
 #include "elf_hook.h"
 #include "core/fd_info.h"
-#include "core/fd_info_collector.h"
+#include "core/fd_canary.h"
 #include "comm/fd_canary_utils.h"
 namespace fdcanary
 {
@@ -62,7 +62,15 @@ const static char *TARGET_MODULES[] = {
 const static size_t TARGET_MODULE_COUNT = sizeof(TARGET_MODULES) / sizeof(char *);
 
 const static char *TARGET_MODULES_2[] = {
-    "libcutils.so"};
+    "libopenjdkjvm.so",
+    "libjavacore.so",
+    "libopenjdk.so",
+    "libandroid_runtime.so",
+    "libandroidfw.so",
+    "libart.so",
+    "libbinder.so",
+    "libcutils.so"
+};
 const static size_t TARGET_MODULE_COUNT_2 = sizeof(TARGET_MODULES_2) / sizeof(char *);
 
 extern "C"
@@ -200,43 +208,38 @@ extern "C"
                 JavaContext java_context(GetCurrentThreadId(), thread_name == NULL ? "" : thread_name, stack == NULL ? "" : stack);
                 free(stack);
                 free(thread_name);
-
-                //iocanary::IOCanary::Get().OnOpen(pathname, flags, mode, ret, java_context);
-
+                fdcanary::FDCanary::Get().OnOpen(pathname, flags, mode, ret, java_context);
                 env->DeleteLocalRef(java_context_obj);
                 env->DeleteLocalRef(j_stack);
                 env->DeleteLocalRef(j_thread_name);
             }
         }
 
-        /**
-             *  Proxy for open: callback to the java layer
-             */
-        //todo astrozhou 解决非主线程打开，主线程操作问题
-        int ProxyOpen(const char *pathname, int flags, mode_t mode)
-        {
-            if (!IsMainThread())
-            {
-                return original_open(pathname, flags, mode);
-            }
 
-            int ret = original_open(pathname, flags, mode);
+    int ProxyOpen(const char *pathname, int flags, mode_t mode)
+    {
+         /*if (!IsMainThread()) {
+             __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen not main thread");
+             return original_open(pathname, flags, mode);
+          }*/
 
-            if (ret != -1)
-            {
-                DoProxyOpenLogic(pathname, flags, mode, ret);
-            }
+         int ret = original_open(pathname, flags, mode);
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen");
+         if (ret != -1)
+         {
+             DoProxyOpenLogic(pathname, flags, mode, ret);
+         }
 
-            return ret;
+         return ret;
         }
 
     int ProxyOpen64(const char *pathname, int flags, mode_t mode)
     {
-        if (!IsMainThread())
-        {
+        /*if (!IsMainThread()) {
+            __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen64 not main thread");
             return original_open64(pathname, flags, mode);
-        }
-
+        }*/
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen64");
         int ret = original_open64(pathname, flags, mode);
 
         if (ret != -1)
@@ -253,16 +256,15 @@ extern "C"
          */
     int ProxyClose(int fd)
     {
-        if (!IsMainThread())
-        {
+        /*if (!IsMainThread()) {
+            __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose not main thread");
             return original_close(fd);
-        }
-
+        }*/
         int ret = original_close(fd);
 
         //__android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose fd:%d ret:%d", fd, ret);
-        //iocanary::IOCanary::Get().OnClose(fd, ret);
-
+        
+        fdcanary::FDCanary::Get().OnClose(fd, ret);
         return ret;
     }
 
@@ -290,8 +292,8 @@ extern "C"
 
         for (int i = 0; i < TARGET_MODULE_COUNT_2; i++)
         {
-            const char *so_name = TARGET_MODULES[i];
-            __android_log_print(ANDROID_LOG_INFO, kTag, "111 try to hook function in %s.", so_name);
+            const char *so_name = TARGET_MODULES_2[i];
+            __android_log_print(ANDROID_LOG_INFO, kTag, "try to hook function in %s.", so_name);
 
             loaded_soinfo *soinfo = elfhook_open(so_name);
             if (!soinfo)
@@ -302,11 +304,11 @@ extern "C"
 
             int result1 = elfhook_replace(soinfo, "open", (void *)ProxyOpen, (void **)&original_open);
             int result2 = elfhook_replace(soinfo, "open64", (void *)ProxyOpen64, (void **)&original_open64);
-            int result3 = elfhook_replace(soinfo, "close", (void *)ProxyOpen, (void **)&original_open);
-            int result4 = elfhook_replace(soinfo, "socket", (void *)ProxyOpen, (void **)&original_open);
-            int result5 = elfhook_replace(soinfo, "socket_close", (void *)ProxyOpen, (void **)&original_open);
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook get_unused_fd_flags, result1:%d, result2:%d, result3:%d, result4:%d, result5:%d",
-                                result1, result2, result3, result4, result5);
+            int result3 = elfhook_replace(soinfo, "close", (void*)ProxyClose, (void**)&original_close);
+            //int result4 = elfhook_replace(soinfo, "socket", (void *)ProxyOpen, (void **)&original_open);
+            //int result5 = elfhook_replace(soinfo, "socket_close", (void *)ProxyOpen, (void **)&original_open);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
+                                result1, result2, result3);
         }
 
         return true;
@@ -316,9 +318,9 @@ extern "C"
     Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_doUnHook(JNIEnv *env, jclass type)
     {
         __android_log_print(ANDROID_LOG_INFO, kTag, "doUnHook");
-        for (int i = 0; i < TARGET_MODULE_COUNT; ++i)
+        for (int i = 0; i < TARGET_MODULE_COUNT_2; ++i)
         {
-            const char *so_name = TARGET_MODULES[i];
+            const char *so_name = TARGET_MODULES_2[i];
             loaded_soinfo *soinfo = elfhook_open(so_name);
             if (!soinfo)
             {
@@ -327,6 +329,8 @@ extern "C"
             elfhook_replace(soinfo, "open", (void *)original_open, nullptr);
             elfhook_replace(soinfo, "open64", (void *)original_open64, nullptr);
             elfhook_replace(soinfo, "close", (void *)original_close, nullptr);
+            //elfhook_replace(soinfo, "socket", (void *)original_close, nullptr);
+            //elfhook_replace(soinfo, "socket_close", (void *)original_close, nullptr);
             elfhook_close(soinfo);
         }
         return true;
