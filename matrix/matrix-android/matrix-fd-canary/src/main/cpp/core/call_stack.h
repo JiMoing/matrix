@@ -14,25 +14,38 @@
  * limitations under the License.
  */
 
-#include <android/log.h>
-#include <thread>
-#include "fd_info_collector.h"
-#include "comm/fd_canary_utils.h"
 
+#ifndef MATRIX_FD_CANARY_CALL_STACK_H
+#define MATRIX_FD_CANARY_CALL_STACK_H
 
-namespace fdcanary {
+#include <unwind.h>
+#include <dlfcn.h>
+#include <string>
+#include <stdio.h>
+#include <string.h>
 
-    void FDInfoCollector::OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context) {
+namespace fdcanary
+{
+    
+    struct BacktraceState
+    {
+        intptr_t *current;
+        intptr_t *end;
+    };
 
-    __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen path is [%s], flag:[%d], mode:[%d],open_ret:[%d]",
-            pathname, flags, mode, open_ret);
+    static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context *context, void *arg);
 
-        
-    }
+    class CallStack
+    {
+    public:
 
+        size_t captureBacktrace(intptr_t *buffer, size_t maxStackDeep);
 
-    std::shared_ptr<FDInfo> FDInfoCollector::OnClose(int fd, int close_ret) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose" );    
-        return nullptr;
-    }
+        void dumpBacktraceIndex(char* out, intptr_t *buffer, size_t count);
+
+        void dumpCallStack(char* outBuf);
+    };
+    
 }
+
+#endif //MATRIX_FD_CANARY_CALL_STACK_H

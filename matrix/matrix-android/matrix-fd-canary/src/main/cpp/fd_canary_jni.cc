@@ -34,6 +34,7 @@ static const char *const kTag = "FDCanary.JNI";
 static int (*original_open)(const char *pathname, int flags, mode_t mode);
 static int (*original_open64)(const char *pathname, int flags, mode_t mode);
 static int (*original_close)(int fd);
+static int (*original_ashmem_create_region) (const char *name, size_t size);
 
 
 static bool kInitSuc = false;
@@ -72,6 +73,15 @@ const static char *TARGET_MODULES_2[] = {
     "libcutils.so"
 };
 const static size_t TARGET_MODULE_COUNT_2 = sizeof(TARGET_MODULES_2) / sizeof(char *);
+
+const static char *TARGET_MODULES_ASHMEM[] = {
+    "libandroid_runtime.so",
+    "libandroidfw.so",
+    "libart.so",
+    "libbinder.so",
+    "libcutils.so",
+};
+const static size_t TARGET_MODULE_COUNT_ASHMEM = sizeof(TARGET_MODULES_ASHMEM) / sizeof(char *);
 
 extern "C"
 {
@@ -268,6 +278,12 @@ extern "C"
         return ret;
     }
 
+    int ProxyAshMemCreateRegion(const char *name, size_t size) {
+        int result = original_ashmem_create_region(name, size);
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyAshMemCreateRegion result:%d", result);
+        return result;
+    }
+
     void dumpFdInfo()
     {
         QueryFD fd_info;
@@ -277,6 +293,25 @@ extern "C"
         {
             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "result is %s", s.c_str());
         }
+    }
+
+    void proxyAshmem() {
+        for (int i = 0; i < TARGET_MODULE_COUNT_ASHMEM; i++)
+        {
+            const char *so_name = TARGET_MODULES_ASHMEM[i];
+            __android_log_print(ANDROID_LOG_INFO, kTag, "proxyAshmem try to hook function in %s.", so_name);
+
+            loaded_soinfo *soinfo = elfhook_open(so_name);
+            if (!soinfo)
+            {
+                __android_log_print(ANDROID_LOG_WARN, kTag, "Failure to open %s, try next.", so_name);
+                continue;
+            }
+
+            int result1 = elfhook_replace(soinfo, "ashmem_create_region", (void *)ProxyAshMemCreateRegion, (void **)&original_ashmem_create_region);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d",
+                                result1);
+        } 
     }
 
     JNIEXPORT void JNICALL
@@ -311,6 +346,7 @@ extern "C"
                                 result1, result2, result3);
         }
 
+        proxyAshmem();
         return true;
     }
 
@@ -329,6 +365,7 @@ extern "C"
             elfhook_replace(soinfo, "open", (void *)original_open, nullptr);
             elfhook_replace(soinfo, "open64", (void *)original_open64, nullptr);
             elfhook_replace(soinfo, "close", (void *)original_close, nullptr);
+            elfhook_replace(soinfo, "ashmem_create_region", (void *)original_ashmem_create_region, nullptr);
             //elfhook_replace(soinfo, "socket", (void *)original_close, nullptr);
             //elfhook_replace(soinfo, "socket_close", (void *)original_close, nullptr);
             elfhook_close(soinfo);

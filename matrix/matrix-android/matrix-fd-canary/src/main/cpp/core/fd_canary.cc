@@ -20,7 +20,8 @@
 
 #include "fd_canary.h"
 #include <thread>
-
+#include <android/log.h>
+#include <string.h>
 namespace fdcanary {
 
     FDCanary& FDCanary::Get() {
@@ -41,6 +42,9 @@ namespace fdcanary {
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
                           int open_ret, const JavaContext& java_context) {
         collector_.OnOpen(pathname, flags, mode, open_ret, java_context);
+        char stack[2048] = {0};
+        call_stack_.dumpCallStack(stack);
+        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: \n%s", stack);    
     }
 
     void FDCanary::OnClose(int fd, int close_ret) {

@@ -5,21 +5,45 @@
     android:layout_height="match_parent"
     android:gravity="center_horizontal">
     <Button
-        android:id="@+id/write"
+        android:id="@+id/stream"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:minWidth="200dp"
         android:onClick="onClick"
-        android:text="write" />
+        android:text="Stream" />
     <Button
-        android:id="@+id/socket"
+        android:id="@+id/input_channel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:minWidth="200dp"
         android:onClick="onClick"
-        android:text="addView" />
+        android:text="InputChannel" />
+    <Button
+        android:id="@+id/thread"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minWidth="200dp"
+        android:onClick="onClick"
+        android:text="thread" />
+    <Button
+        android:id="@+id/looper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minWidth="200dp"
+        android:onClick="onClick"
+        android:text="looper" />
+    <Button
+        android:id="@+id/cursor"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minWidth="200dp"
+        android:onClick="onClick"
+        android:text="cursor" />
     <Button
         android:id="@+id/dump"
         android:layout_width="wrap_content"

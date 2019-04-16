@@ -25,6 +25,7 @@
 #include <memory>
 #include <deque>
 #include "fd_info_collector.h"
+#include "call_stack.h"
 
 namespace fdcanary {
 
@@ -56,6 +57,7 @@ namespace fdcanary {
         //std::vector<FileFDDetector*> detectors_;
 
         FDInfoCollector collector_;
+        CallStack call_stack_;
         std::deque<std::shared_ptr<FDInfo>> queue_;
         std::mutex queue_mutex_;
         std::condition_variable queue_cv_;

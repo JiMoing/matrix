@@ -17,14 +17,20 @@ package sample.tencent.matrix.fd;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
@@ -94,16 +100,22 @@ public class TestFdActivity extends Activity {
     }
 
     public void onClick(View v) {
-        if (v.getId() == R.id.socket) {
-            testSocket();
+        if (v.getId() == R.id.stream) {
+            writeSth();
+        } else if (v.getId() == R.id.input_channel) {
+            testInputChannel();
+        } else if (v.getId() == R.id.thread) {
+            testThread();
+        } else if (v.getId() == R.id.looper) {
+            testLooper();
+        } else if (v.getId() == R.id.cursor) {
+            testCursor();
         } else if (v.getId() == R.id.dump) {
             FDCanaryJniBridge.dumpFdInfo();
-        } else if (v.getId() == R.id.write) {
-            writeSth();
         }
     }
 
-    public void testSocket() {
+    public void testInputChannel() {
         for (int i = 0; i < 10; i++) {
             //recount();
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -127,6 +139,51 @@ public class TestFdActivity extends Activity {
             AlertDialog dialog = builder.create();
             dialog.show();
             dialogs.add(dialog);
+        }
+    }
+
+    private void testThread() {
+
+        for (int i = 0; i < 100; i ++) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    Log.d(TAG, "testThread id: " + Thread.currentThread());
+                    try {
+                        Thread.sleep(30000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            });
+
+            thread.start();
+        }
+    }
+
+    private void testLooper() {
+
+        for (int i = 0; i < 100; i ++) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+
+                    Log.d(TAG, "testLooper id: " + Thread.currentThread());
+
+                    Looper.prepare();
+                    Looper.loop();
+                }
+            });
+
+            thread.start();
+        }
+    }
+
+    private void testCursor() {
+        for (int i = 0; i < 100; i ++) {
+            Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+            ContentResolver cr = this.getContentResolver();//mContext是一个Context对象
+            Cursor cs = cr.query(uri, null, null, null, null);
         }
     }
 
