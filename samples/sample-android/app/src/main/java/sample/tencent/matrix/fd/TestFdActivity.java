@@ -122,7 +122,7 @@ public class TestFdActivity extends Activity {
             // 设置参数
             builder.setTitle("TEST")
                     .setMessage("TEST")
-                    .setPositiveButton("CLOSE", new DialogInterface.OnClickListener() {// 积极
+                    .setPositiveButton("CLOSE" + i, new DialogInterface.OnClickListener() {// 积极
 
                         @Override
                         public void onClick(DialogInterface dialog, int which) {

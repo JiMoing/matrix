@@ -29,8 +29,8 @@ namespace fdcanary {
             }
         }
         return _URC_NO_REASON;
-    
-    
+
+
     }
  
     size_t CallStack::captureBacktrace(intptr_t* buffer, size_t maxStackDeep)
@@ -40,52 +40,34 @@ namespace fdcanary {
         return state.current - buffer;
     }
 
-    void CallStack::dumpBacktraceIndex(char* out, intptr_t* buffer, size_t count)
-    {
-        for (size_t idx = 0; idx < count; ++idx) {
+    void CallStack::dumpBacktraceIndex(std::string &out, intptr_t* buffer, size_t count) {
+        char deep[100] = {0};
+        sprintf(deep, "call stack deep is %zu", count);
+        out.append(deep);
+        for(size_t idx = 0; idx < count; idx++) {
             intptr_t addr = buffer[idx];
-            const char* symbol = "      ";
-            const char* dlfile="      ";
             Dl_info info;
             if (dladdr((void*)addr, &info)) {
-                if(info.dli_sname){
-                    symbol = info.dli_sname;
+                out.append("\n");
+                char temp[50] = {0};
+                sprintf(temp,"#%zu    %zu    ",idx, addr);
+                out.append(temp);
+                if (info.dli_sname) {
+                    out.append(info.dli_sname);
+                    out.append("    ");
+                } 
+                if(info.dli_fname) {
+                    out.append(info.dli_fname);
                 }
-                if(info.dli_fname){
-                    dlfile = info.dli_fname;
-                }            
-            }else{
-                strcat(out,"#                               \n");
-                continue;
             }
-            /*out.append("%zu",idx);
-            out.append(" #: ");
-            out.append("%zu",addr);
-            out.append("    ");
-            out.append(symbol);
-            out.append("    ");
-            out.append(dlfile);
-            out.append("\n");*/
-            char temp[50];
-            memset(temp,0,sizeof(temp));
-            sprintf(temp,"%zu",idx);
-            strcat(out,"#");
-            strcat(out,temp);
-            strcat(out, ": ");
-            memset(temp,0,sizeof(temp));
-            sprintf(temp,"%zu",addr);
-            strcat(out,temp);
-            strcat(out, "  " );
-            strcat(out, symbol);
-            strcat(out, "      ");
-            strcat(out, dlfile);
-            strcat(out, "\n" );
         }
     }
 
-    void CallStack::dumpCallStack(char* outBuf) {
+    void CallStack::dumpCallStack(std::string &outBuf) {
+        
         const size_t maxStackDeep = 20;
         intptr_t stackBuf[maxStackDeep];
         dumpBacktraceIndex(outBuf, stackBuf, captureBacktrace(stackBuf, maxStackDeep));
+        
     }
 }

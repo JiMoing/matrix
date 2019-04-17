@@ -42,7 +42,7 @@ namespace fdcanary {
 
         void OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context);
         void OnClose(int fd, int close_ret);
-
+        void dumpStack();
     private:
         FDCanary();
         ~FDCanary();

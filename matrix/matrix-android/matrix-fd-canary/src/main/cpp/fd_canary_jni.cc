@@ -63,13 +63,13 @@ const static char *TARGET_MODULES[] = {
 const static size_t TARGET_MODULE_COUNT = sizeof(TARGET_MODULES) / sizeof(char *);
 
 const static char *TARGET_MODULES_2[] = {
-    "libopenjdkjvm.so",
+    "libopenjdkjvm.so", //io相关
     "libjavacore.so",
     "libopenjdk.so",
     "libandroid_runtime.so",
     "libandroidfw.so",
-    "libart.so",
-    "libbinder.so",
+    "libart.so", //inputchannel相关，thread相关，looper相关,ashmem相关
+    //"libbinder.so",
     "libcutils.so"
 };
 const static size_t TARGET_MODULE_COUNT_2 = sizeof(TARGET_MODULES_2) / sizeof(char *);
@@ -78,7 +78,7 @@ const static char *TARGET_MODULES_ASHMEM[] = {
     "libandroid_runtime.so",
     "libandroidfw.so",
     "libart.so",
-    "libbinder.so",
+    //"libbinder.so",
     "libcutils.so",
 };
 const static size_t TARGET_MODULE_COUNT_ASHMEM = sizeof(TARGET_MODULES_ASHMEM) / sizeof(char *);
@@ -197,12 +197,10 @@ extern "C"
         {
             JNIEnv *env = NULL;
             kJvm->GetEnv((void **)&env, JNI_VERSION_1_6);
-            if (env == NULL || !kInitSuc)
-            {
+            if (env == NULL || !kInitSuc) {
                 __android_log_print(ANDROID_LOG_ERROR, kTag, "ProxyOpen env null or kInitSuc:%d", kInitSuc);
             }
-            else
-            {
+            else {
                 //jni获取javabridge中的thread和堆栈信息
                 jobject java_context_obj = env->CallStaticObjectMethod(kJavaBridgeClass, kMethodIDGetJavaContext);
                 if (NULL == java_context_obj)
@@ -279,6 +277,9 @@ extern "C"
     }
 
     int ProxyAshMemCreateRegion(const char *name, size_t size) {
+        
+        fdcanary::FDCanary::Get().dumpStack();
+        
         int result = original_ashmem_create_region(name, size);
         __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyAshMemCreateRegion result:%d", result);
         return result;
@@ -345,7 +346,7 @@ extern "C"
             __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
                                 result1, result2, result3);
         }
-
+        fdcanary::FDCanary::Get().dumpStack();
         proxyAshmem();
         return true;
     }

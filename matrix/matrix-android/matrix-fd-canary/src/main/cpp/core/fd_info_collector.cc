@@ -24,7 +24,7 @@ namespace fdcanary {
 
     void FDInfoCollector::OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context) {
 
-    __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen path is [%s], flag:[%d], mode:[%d],open_ret:[%d]",
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen path is [%s], flag:[%d], mode:[%d],open_ret:[%d]",
             pathname, flags, mode, open_ret);
 
         
@@ -32,7 +32,7 @@ namespace fdcanary {
 
 
     std::shared_ptr<FDInfo> FDInfoCollector::OnClose(int fd, int close_ret) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose" );    
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose fd:[%d], close_ret:[%d]",fd, close_ret);    
         return nullptr;
     }
 }

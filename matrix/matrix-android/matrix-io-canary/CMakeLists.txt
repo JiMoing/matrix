@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.4.1)
 
 project(IOCanary)
-
 aux_source_directory(../matrix-android-commons/src/main/cpp/elf_hook ELF_HOOK)
 include_directories(../matrix-android-commons/src/main/cpp/elf_hook)
 

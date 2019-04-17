@@ -41,9 +41,9 @@ namespace fdcanary
 
         size_t captureBacktrace(intptr_t *buffer, size_t maxStackDeep);
 
-        void dumpBacktraceIndex(char* out, intptr_t *buffer, size_t count);
+        void dumpBacktraceIndex(std::string &out, intptr_t *buffer, size_t count);
 
-        void dumpCallStack(char* outBuf);
+        void dumpCallStack(std::string &outBuf);
     };
     
 }
