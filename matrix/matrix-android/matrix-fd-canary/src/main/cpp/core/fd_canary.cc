@@ -21,7 +21,6 @@
 #include "fd_canary.h"
 #include <thread>
 #include <android/log.h>
-#include <string.h>
 namespace fdcanary {
 
     FDCanary& FDCanary::Get() {
@@ -41,24 +40,30 @@ namespace fdcanary {
 
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
                           int open_ret, const JavaContext& java_context) {
-        collector_.OnOpen(pathname, flags, mode, open_ret, java_context);
-        dumpStack();
+        std::string key = std::to_string(open_ret);
+        std::string value;
+        dumpStack(value);
+        collector_.OnOpen(key, value);
+        //dumpStack();
+    }
+
+    void FDCanary::AshmemCreateRegion(const char *name, size_t size, int fd) {
+
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyAshMemCreateRegion name:%s, size:%zu, fd:%d", name, size, fd);
     }
 
     void FDCanary::OnClose(int fd, int close_ret) {
-        std::shared_ptr<FDInfo> info = collector_.OnClose(fd, close_ret);
-        dumpStack();
-        if (info == nullptr) {
-            return;
-        }
+        std::string key = std::to_string(fd);
+        collector_.OnClose(key);
+        //dumpStack();
+        //todo 调用太多了
         
         //OfferFileFDInfo(info);
     }
 
-    void FDCanary::dumpStack() {
-        std::string stack;
+    void FDCanary::dumpStack(std::string& stack) {
         call_stack_.dumpCallStack(stack);
-        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: \n%s", stack.c_str());    
+        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s", stack.c_str());    
     }
    /*void FDCanary::OfferFileFDInfo(std::shared_ptr<FDInfo> file_fd_info) {
         std::unique_lock<std::mutex> lock(queue_mutex_);

@@ -278,10 +278,9 @@ extern "C"
 
     int ProxyAshMemCreateRegion(const char *name, size_t size) {
         
-        fdcanary::FDCanary::Get().dumpStack();
-        
         int result = original_ashmem_create_region(name, size);
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyAshMemCreateRegion result:%d", result);
+
+        fdcanary::FDCanary::Get().AshmemCreateRegion(name, size, result);
         return result;
     }
 
@@ -346,7 +345,7 @@ extern "C"
             __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
                                 result1, result2, result3);
         }
-        fdcanary::FDCanary::Get().dumpStack();
+        //fdcanary::FDCanary::Get().dumpStack();
         proxyAshmem();
         return true;
     }

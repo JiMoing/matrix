@@ -77,13 +77,13 @@ namespace fdcanary {
     // A singleton to collect and generate operation info
     class FDInfoCollector {
     public:
-        void OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context);
-        std::shared_ptr<FDInfo> OnClose(int fd, int close_ret);
+        void OnOpen(std::string &key, std::string &stack);
+        void OnClose(std::string &key);
 
     private:
         constexpr static const int kContinualThreshold = 8*1000;//in μs， half of 16.6667
 
-        std::unordered_map<int, std::shared_ptr<FDInfo>> info_map_;
+        std::unordered_map<std::string, std::string> info_map_;
     };
 }
 

@@ -24,6 +24,7 @@
 #include <condition_variable>
 #include <memory>
 #include <deque>
+#include <string>
 #include "fd_info_collector.h"
 #include "call_stack.h"
 
@@ -41,8 +42,9 @@ namespace fdcanary {
         //void SetIssuedCallback(OnPublishIssueCallback issued_callback);
 
         void OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context);
+        void AshmemCreateRegion(const char *name, size_t size, int fd);
         void OnClose(int fd, int close_ret);
-        void dumpStack();
+        void dumpStack(std::string& stack);
     private:
         FDCanary();
         ~FDCanary();

@@ -52,13 +52,16 @@ namespace fdcanary {
                 char temp[50] = {0};
                 sprintf(temp,"#%zu    %zu    ",idx, addr);
                 out.append(temp);
-                if (info.dli_sname) {
-                    out.append(info.dli_sname);
-                    out.append("    ");
-                } 
                 if(info.dli_fname) {
                     out.append(info.dli_fname);
+                    out.append("    ");
                 }
+                if (info.dli_sname) {
+                    out.append("(");
+                    out.append(info.dli_sname);
+                    out.append(")");
+                } 
+                
             }
         }
     }

@@ -22,17 +22,25 @@
 
 namespace fdcanary {
 
-    void FDInfoCollector::OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context) {
+    void FDInfoCollector::OnOpen(std::string &key, std::string &stack) {
 
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen path is [%s], flag:[%d], mode:[%d],open_ret:[%d]",
-            pathname, flags, mode, open_ret);
-
+        info_map_.insert(std::make_pair(key, stack));
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen size is[%zu],key is [%s]]",
+            info_map_.size(), key.c_str());
         
     }
 
 
-    std::shared_ptr<FDInfo> FDInfoCollector::OnClose(int fd, int close_ret) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose fd:[%d], close_ret:[%d]",fd, close_ret);    
-        return nullptr;
+    void FDInfoCollector::OnClose(std::string &key) {
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose size is [%zu], key:[%s]",
+            info_map_.size(), key.c_str());
+        std::unordered_map<std::string, std::string>::iterator it;
+        it = info_map_.find(key);
+        if (it != info_map_.end()) {
+            info_map_.erase(key);
+           __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::OnClose erase success value is %s", it->second.c_str());
+        } else {
+           __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::OnClose erase fail");
+        }
     }
 }
