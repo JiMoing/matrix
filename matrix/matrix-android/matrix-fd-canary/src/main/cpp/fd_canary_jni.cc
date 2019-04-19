@@ -22,6 +22,7 @@
 #include <cstddef>
 #include <android/log.h>
 #include <assert.h>
+#include <time.h>
 #include "elf_hook.h"
 #include "core/fd_info.h"
 #include "core/fd_canary.h"
@@ -286,6 +287,9 @@ extern "C"
 
     void dumpFdInfo()
     {
+        time_t t1;
+        time(&t1);
+       
         QueryFD fd_info;
         std::list<FDI> list = fd_info.QueryFDInfo(1024);
         std::list<std::string> result = fd_info.PrettyFDInfo(list);
@@ -293,6 +297,10 @@ extern "C"
         {
             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "result is %s", s.c_str());
         }
+         
+        time_t t2;
+        time(&t2);
+        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "dumpFdInfo t1:[%ld], t2:[%ld], speed time:%ld",t1, t2, (t2-t1));
     }
 
     void proxyAshmem() {
@@ -345,7 +353,8 @@ extern "C"
             __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
                                 result1, result2, result3);
         }
-        //fdcanary::FDCanary::Get().dumpStack();
+        std::string stack;
+        fdcanary::FDCanary::Get().dumpStack(stack);
         proxyAshmem();
         return true;
     }

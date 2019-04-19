@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "call_stack.h"
+#include <android/log.h>
 namespace fdcanary {
 
     static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg)
@@ -42,27 +43,30 @@ namespace fdcanary {
 
     void CallStack::dumpBacktraceIndex(std::string &out, intptr_t* buffer, size_t count) {
         char deep[100] = {0};
+        std::string single_str;
         sprintf(deep, "call stack deep is %zu", count);
         out.append(deep);
         for(size_t idx = 0; idx < count; idx++) {
             intptr_t addr = buffer[idx];
             Dl_info info;
             if (dladdr((void*)addr, &info)) {
-                out.append("\n");
                 char temp[50] = {0};
                 sprintf(temp,"#%zu    %zu    ",idx, addr);
-                out.append(temp);
+                single_str.append(temp);
                 if(info.dli_fname) {
-                    out.append(info.dli_fname);
-                    out.append("    ");
+                    single_str.append(info.dli_fname);
+                    single_str.append("    ");
                 }
                 if (info.dli_sname) {
-                    out.append("(");
-                    out.append(info.dli_sname);
-                    out.append(")");
-                } 
-                
+                    single_str.append("(");
+                    single_str.append(info.dli_sname);
+                    single_str.append(")");
+                }    
             }
+            out.append("\n");
+            out.append(single_str);
+            __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
+            single_str = "";  
         }
     }
 

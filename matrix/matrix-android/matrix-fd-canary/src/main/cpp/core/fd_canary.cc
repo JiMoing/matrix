@@ -21,6 +21,7 @@
 #include "fd_canary.h"
 #include <thread>
 #include <android/log.h>
+#include <time.h>
 namespace fdcanary {
 
     FDCanary& FDCanary::Get() {
@@ -62,8 +63,14 @@ namespace fdcanary {
     }
 
     void FDCanary::dumpStack(std::string& stack) {
+        time_t t1;
+        time(&t1);
+        
         call_stack_.dumpCallStack(stack);
-        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s", stack.c_str());    
+        time_t t2;
+        time(&t2);
+        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "t1:[%ld], t2:[%ld], speed time:%ld",t1, t2, (t2-t1));
+        //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s, ", stack.c_str());    
     }
    /*void FDCanary::OfferFileFDInfo(std::shared_ptr<FDInfo> file_fd_info) {
         std::unique_lock<std::mutex> lock(queue_mutex_);
