@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-//
-// Created by liyongjie on 2017/12/7.
-//
 
 #ifndef MATRIX_FD_CANARY_FD_CANARY_H
 #define MATRIX_FD_CANARY_FD_CANARY_H

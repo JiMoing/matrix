@@ -41,10 +41,10 @@ namespace fdcanary {
 
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
                           int open_ret, const JavaContext& java_context) {
-        std::string key = std::to_string(open_ret);
+        
         std::string value;
         dumpStack(value);
-        collector_.OnOpen(key, value);
+        collector_.OnOpen(open_ret, value);
         //dumpStack();
     }
 
@@ -54,8 +54,8 @@ namespace fdcanary {
     }
 
     void FDCanary::OnClose(int fd, int close_ret) {
-        std::string key = std::to_string(fd);
-        collector_.OnClose(key);
+        
+        collector_.OnClose(fd);
         //dumpStack();
         //todo 调用太多了
         

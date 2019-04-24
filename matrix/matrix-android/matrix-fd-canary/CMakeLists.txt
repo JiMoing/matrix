@@ -8,8 +8,6 @@ include_directories(../matrix-android-commons/src/main/cpp/elf_hook)
 aux_source_directory(src/main/cpp/comm/ SRC_DIR_COMM)
 aux_source_directory(src/main/cpp/core/ SRC_DIR_CORE)
 aux_source_directory(${PROJECT_SOURCE_DIR}/../matrix-android-commons/src/main/cpp/md5 MD5_SRCS)
-
-aux_source_directory(src/main/cpp/core/ SRC_DIR_CORE)
 include_directories(${PROJECT_SOURCE_DIR}/../matrix-android-commons/src/main/cpp/md5)
 include_directories(src/main/cpp)
 

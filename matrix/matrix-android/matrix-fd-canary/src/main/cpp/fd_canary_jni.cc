@@ -24,7 +24,7 @@
 #include <assert.h>
 #include <time.h>
 #include "elf_hook.h"
-#include "core/fd_info.h"
+#include "core/fd_dump.h"
 #include "core/fd_canary.h"
 #include "comm/fd_canary_utils.h"
 namespace fdcanary

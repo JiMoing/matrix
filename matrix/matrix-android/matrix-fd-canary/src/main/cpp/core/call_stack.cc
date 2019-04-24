@@ -63,6 +63,13 @@ namespace fdcanary {
                     single_str.append(")");
                 }    
             }
+            char* error = dlerror();
+            if (error) {
+                single_str.append("error:");
+                single_str.append(error);
+            }
+            
+
             out.append("\n");
             out.append(single_str);
             __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
