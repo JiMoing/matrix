@@ -27,10 +27,11 @@ namespace fdcanary{
         int error = 0;
         std::string path_or_name;
     };
-    static bool get_fd_path(int fd, char szbuf[1024]);
 
     class QueryFD {
     public:
+        static bool get_fd_path(int fd, char szbuf[1024]);
+        static const char* type2name(int type);
         static std::list<FDI> QueryFDInfo(int maxfd);
         static std::list<std::string> PrettyFDInfo(const std::list<FDI>& fdi);
     };

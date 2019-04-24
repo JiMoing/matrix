@@ -84,9 +84,12 @@ class FDInfoCollector
   public:
     void OnOpen(int fd, std::string &stack);
     void OnClose(int fd);
+    int GetType(int fd);
 
-    void Insert(int fd, std::string &stack);
-    void Remove();
+    void InsertTypeMap(int type, int fd, std::string &stack);
+    void RemoveTypeMap(int type, int fd);
+    void RemoveImpl(int fd, std::unordered_map<int, std::string> &map);
+
 
   private:
     constexpr static const int kContinualThreshold = 8 * 1000; //in μs， half of 16.6667

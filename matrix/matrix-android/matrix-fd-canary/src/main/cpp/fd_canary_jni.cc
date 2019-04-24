@@ -269,11 +269,12 @@ extern "C"
             __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose not main thread");
             return original_close(fd);
         }*/
+
+        fdcanary::FDCanary::Get().OnClose(fd);
         int ret = original_close(fd);
 
         //__android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose fd:%d ret:%d", fd, ret);
         
-        fdcanary::FDCanary::Get().OnClose(fd, ret);
         return ret;
     }
 

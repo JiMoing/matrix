@@ -18,8 +18,7 @@
 #endif
 
 namespace fdcanary {
-
-    static bool get_fd_path(int fd, char szbuf[1024]){
+    bool QueryFD::get_fd_path(int fd, char szbuf[1024]){
 
     #ifdef __APPLE__
 
@@ -42,7 +41,8 @@ namespace fdcanary {
         return false;
     }
 
-    static const char* type2name(int type){
+
+     const char* QueryFD::type2name(int type){
         switch (type) {
             case S_IFIFO:
                 return "named pipe"; //命名管道
@@ -92,6 +92,7 @@ namespace fdcanary {
         
         return result;
     }
+
 
     std::list<std::string> QueryFD::PrettyFDInfo(const std::list<FDI>& fdi){
         std::list<std::string> result;

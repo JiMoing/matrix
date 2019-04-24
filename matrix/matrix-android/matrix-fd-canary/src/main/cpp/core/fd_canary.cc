@@ -51,9 +51,12 @@ namespace fdcanary {
     void FDCanary::AshmemCreateRegion(const char *name, size_t size, int fd) {
 
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyAshMemCreateRegion name:%s, size:%zu, fd:%d", name, size, fd);
+        std::string value;
+        dumpStack(value);
+        collector_.OnOpen(fd, value);
     }
 
-    void FDCanary::OnClose(int fd, int close_ret) {
+    void FDCanary::OnClose(int fd) {
         
         collector_.OnClose(fd);
         //dumpStack();
