@@ -51,6 +51,7 @@ static jfieldID kFieldIDThreadName;
 
 static jclass kIssueClass;
 static jmethodID kMethodIDIssueConstruct;
+static jmethodID kMethodIDIssueConstruct2;
 
 static jclass kListClass;
 static jmethodID kMethodIDListConstruct;
@@ -120,7 +121,7 @@ extern "C"
         return ret;
     }
 
-    /*void OnIssuePublish(const std::vector<Issue> &published_issues)
+    void OnIssuePublish(const std::vector<Issue> &published_issues)
         {
             if (!kInitSuc)
             {
@@ -156,32 +157,21 @@ extern "C"
                 env->ExceptionDescribe();
                 return;
             }
-
+            __android_log_print(ANDROID_LOG_INFO, kTag, "start issue publish");
             jobject j_issues = env->NewObject(kListClass, kMethodIDListConstruct);
 
             for (const auto &issue : published_issues)
             {
                 jint type = issue.type_;
-                jstring path = env->NewStringUTF(issue.file_io_info_.path_.c_str());
-                jlong file_size = issue.file_io_info_.file_size_;
-                jint op_cnt = issue.file_io_info_.op_cnt_;
-                jlong buffer_size = issue.file_io_info_.buffer_size_;
-                jlong op_cost_time = issue.file_io_info_.rw_cost_μs_ / 1000;
-                jint op_type = issue.file_io_info_.op_type_;
-                jlong op_size = issue.file_io_info_.op_size_;
-                jstring thread_name = env->NewStringUTF(issue.file_io_info_.java_context_.thread_name_.c_str());
-                jstring stack = env->NewStringUTF(issue.stack.c_str());
+                jstring stack = env->NewStringUTF(issue.stack_.c_str());
                 jint repeat_read_cnt = issue.repeat_read_cnt_;
 
-                jobject issue_obj = env->NewObject(kIssueClass, kMethodIDIssueConstruct, type, path, file_size, op_cnt, buffer_size,
-                                                   op_cost_time, op_type, op_size, thread_name, stack, repeat_read_cnt);
-
+                //jobject issue_obj = env->NewObject(kIssueClass, kMethodIDIssueConstruct, type, path, file_size, op_cnt, buffer_size, op_cost_time, op_type, op_size, thread_name, stack, repeat_read_cnt);
+                jobject issue_obj = env->NewObject(kIssueClass, kMethodIDIssueConstruct2, type, stack);
                 env->CallBooleanMethod(j_issues, kMethodIDListAdd, issue_obj);
 
                 env->DeleteLocalRef(issue_obj);
                 env->DeleteLocalRef(stack);
-                env->DeleteLocalRef(thread_name);
-                env->DeleteLocalRef(path);
             }
 
             env->CallStaticVoidMethod(kJavaBridgeClass, kMethodIDOnIssuePublish, j_issues);
@@ -192,7 +182,7 @@ extern "C"
             {
                 kJvm->DetachCurrentThread();
             }
-        }*/
+        }
 
     static void DoProxyOpenLogic(const char *pathname, int flags, mode_t mode, int ret)
         {
@@ -444,6 +434,11 @@ extern "C"
             __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kMethodIDIssueConstruct NULL");
             return false;
         }
+        kMethodIDIssueConstruct2 = env->GetMethodID(kIssueClass, "<init>", "(ILjava/lang/String;)V");
+        if (kMethodIDIssueConstruct2 == NULL) {
+            __android_log_print(ANDROID_LOG_ERROR, kTag, "InitJniEnv kMethodIDIssueConstruct2 NULL");
+            return false;
+        }
 
         jclass list_cls = env->FindClass("java/util/ArrayList");
         kListClass = reinterpret_cast<jclass>(env->NewGlobalRef(list_cls));
@@ -463,7 +458,7 @@ extern "C"
             return -1;
         }
 
-        //iocanary::IOCanary::Get().SetIssuedCallback(OnIssuePublish);
+        fdcanary::FDCanary::Get().SetIssuedCallback(OnIssuePublish);
         kInitSuc = true;
         __android_log_print(ANDROID_LOG_DEBUG, kTag, "JNI_OnLoad done");
         return JNI_VERSION_1_6;

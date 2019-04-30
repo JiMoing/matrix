@@ -85,7 +85,7 @@ public class FDCanaryJniBridge {
         if (sOnIssuePublishListener == null) {
             return;
         }
-
+        MatrixLog.v(TAG, "onIssuePublish %d", issues.size());
         sOnIssuePublishListener.onIssuePublish(issues);
     }
 

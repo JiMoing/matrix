@@ -35,9 +35,9 @@ namespace fdcanary {
         //detect_thread.detach();
     }
 
-    /*void FDCanary::SetIssuedCallback(OnPublishIssueCallback issued_callback) {
+    void FDCanary::SetIssuedCallback(OnPublishIssueCallback issued_callback) {
         issued_callback_ = issued_callback;
-    }*/
+    }
 
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
                           int open_ret, const JavaContext& java_context) {
@@ -45,7 +45,7 @@ namespace fdcanary {
         std::string value;
         dumpStack(value);
         collector_.OnOpen(open_ret, value);
-        //dumpStack();
+        PublishIssue();
     }
 
     void FDCanary::AshmemCreateRegion(const char *name, size_t size, int fd) {
@@ -75,6 +75,22 @@ namespace fdcanary {
         __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "t1:[%ld], t2:[%ld], speed time:%ld",t1, t2, (t2-t1));
         //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s, ", stack.c_str());    
     }
+
+    void FDCanary::PublishIssue() {
+        if (publish_count_ >= 3) {
+            return;
+        }
+        publish_count_++;
+        std::string stack;
+        dumpStack(stack);
+
+        Issue issue(FDIssueType::kFDIO, stack);
+        issues.push_back(issue);
+        if (issued_callback_) {
+            issued_callback_(issues);
+        }
+    }
+
    /*void FDCanary::OfferFileFDInfo(std::shared_ptr<FDInfo> file_fd_info) {
         std::unique_lock<std::mutex> lock(queue_mutex_);
         queue_.push_back(file_fd_info);
@@ -128,5 +144,9 @@ namespace fdcanary {
         queue_cv_.notify_one();
 
         //detectors_.clear();
+    }
+
+    Issue::Issue(FDIssueType _type, std::string &_stack):type_(_type),stack_(_stack) {
+
     }
 }

@@ -16,22 +16,27 @@
 
 package com.tencent.matrix.fdcanary.core;
 
-public final class FDIssue {
-    public final int type;
-    public final String path;
-    public final long fileSize;
-    public final int opCnt;
-    public final long bufferSize;
-    public final long opCostTime;
-    public final int opType;
-    public final long opSize;
-    public final String threadName;
-    public final String stack;
+public class FDIssue {
+    public int type;
+    public String path;
+    public long fileSize;
+    public int opCnt;
+    public long bufferSize;
+    public long opCostTime;
+    public int opType;
+    public long opSize;
+    public String threadName;
+    public String stack;
 
-    public final int repeatReadCnt;
+    public int repeatReadCnt;
 
-    public FDIssue(int type, String path, long fileSize, int opCnt, long bufferSize, long opCostTime,
-                   int opType, long opSize, String threadName, String stack, int repeatReadCnt) {
+    public FDIssue(int type, String stack) {
+        this.type = type;
+        this.stack = stack;
+    }
+
+    public FDIssue(int type, String path, long fileSize, int opCnt, long bufferSize, long opCostTime, int opType,
+            long opSize, String threadName, String stack, int repeatReadCnt) {
         this.type = type;
         this.path = path;
         this.fileSize = fileSize;
