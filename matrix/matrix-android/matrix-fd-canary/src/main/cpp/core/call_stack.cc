@@ -72,7 +72,7 @@ namespace fdcanary {
 
             out.append("\n");
             out.append(single_str);
-            __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
+            //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
             single_str = "";  
         }
     }

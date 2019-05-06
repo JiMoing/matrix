@@ -84,11 +84,7 @@ class FDInfoCollector
   public:
     void OnOpen(int fd, std::string &stack);
     void OnClose(int fd);
-    int GetType(int fd);
 
-    void InsertTypeMap(int type, int fd, std::string &stack);
-    void RemoveTypeMap(int type, int fd);
-    void RemoveImpl(int fd, std::unordered_map<int, std::string> &map);
 
 
   private:
@@ -101,6 +97,15 @@ class FDInfoCollector
     std::unordered_map<int, std::string> socket_map_;
 
     std::unordered_map<int, std::string> dmabuf_map_;
+
+    int GetType(int fd);
+
+    void InsertTypeMap(int type, int fd, std::string &stack);
+    void RemoveTypeMap(int type, int fd);
+    void RemoveImpl(int fd, std::unordered_map<int, std::string> &map);
+
+    void GetMapsInfo();
+    
 };
 } // namespace fdcanary
 

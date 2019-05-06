@@ -40,6 +40,70 @@ namespace fdcanary {
         if (type != -1) {
             RemoveTypeMap(type, fd);
         }
+
+        GetMapsInfo();
+    }
+
+    //debug方法
+    void FDInfoCollector::GetMapsInfo() {
+        std::string str;
+        char temp_size_1[50];
+        sprintf(temp_size_1, "pipe_map_:size: %zu ", pipe_map_.size());
+        str.append(temp_size_1);
+        if (pipe_map_.size() > 0) {
+            str.append("[");
+            for(std::unordered_map<int, std::string>::iterator iter = pipe_map_.begin(); iter != pipe_map_.end(); iter++) {
+                str.append(std::to_string(iter->first));
+                str.append(",");
+            }
+
+            str.append("]");
+        }
+
+        
+        char temp_size_2[50];
+        sprintf(temp_size_2, "dmabuf_map_:size: %zu ", dmabuf_map_.size());
+        str.append(temp_size_2);
+        if (dmabuf_map_.size() > 0) {
+            str.append("[");
+            for(std::unordered_map<int, std::string>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
+                str.append(std::to_string(iter->first));
+                str.append(",");
+            }
+
+            str.append("]");
+        }
+
+        char temp_size_3[50];
+        sprintf(temp_size_3, "io_map_:size: %zu ", io_map_.size());
+        str.append(temp_size_3);
+        if (io_map_.size() > 0) {
+            str.append("[");
+            for(std::unordered_map<int, std::string>::iterator iter = io_map_.begin(); iter != io_map_.end(); iter++) {
+                str.append(std::to_string(iter->first));
+                str.append(",");
+            }
+
+            str.append("]");
+        }
+
+        char temp_size_4[50];
+        sprintf(temp_size_4, "socket_map_:size: %zu ", socket_map_.size());
+        str.append(temp_size_4);
+        if (socket_map_.size() > 0) {
+            str.append("[");
+            for(std::unordered_map<int, std::string>::iterator iter = socket_map_.begin(); iter != socket_map_.end(); iter++) {
+                str.append(std::to_string(iter->first));
+                str.append(",");
+            }
+
+            str.append("]");
+        }
+
+
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::GetMapsInfo: %s", str.c_str());
+        
+        
     }
 
     int FDInfoCollector::GetType(int fd) {
