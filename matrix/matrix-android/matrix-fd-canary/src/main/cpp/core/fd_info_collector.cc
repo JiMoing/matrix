@@ -37,6 +37,7 @@ namespace fdcanary {
         }
 
         if(issue_detector_.CheckLimit(fd)) {
+            GetMapsInfo();
             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen Exceed the upper limit fd:[%d]", fd);
             std::vector<FDIssue> all_issue;
             BuildIssueList(all_issue);
@@ -117,7 +118,7 @@ namespace fdcanary {
         
     }
 
-    void FDInfoCollector::BuildIssueList(std::vector<FDIssue> _all_issue) {
+    void FDInfoCollector::BuildIssueList(std::vector<FDIssue> &_all_issue) {
         if (io_map_.size() > 0) {
             for(std::unordered_map<int, FDInfo>::iterator iter = io_map_.begin(); iter != io_map_.end(); iter++) {
                 FDIssue issue(iter->second);

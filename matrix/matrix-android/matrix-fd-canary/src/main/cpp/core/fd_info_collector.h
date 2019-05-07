@@ -63,7 +63,7 @@ class FDInfoCollector
     void RemoveImpl(int fd, std::unordered_map<int, FDInfo> &map);
 
     void GetMapsInfo();
-    void BuildIssueList(std::vector<FDIssue> _all_issue);
+    void BuildIssueList(std::vector<FDIssue> &_all_issue);
     
 };
 } // namespace fdcanary

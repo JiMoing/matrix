@@ -37,7 +37,8 @@ namespace fdcanary {
 
     void IssueDetector::PublishIssue(std::vector<FDIssue> issues) {
 
-        if (has_publish_issue && issues.size() == 0) {
+        //todo issue多次调用
+        if (has_publish_issue || issues.size() == 0) {
             return;
         }
         
