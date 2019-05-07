@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 #include <memory>
+#include <vector>
 #include <mutex>
 #include <unordered_map>
 #include "issue_detector.h"
@@ -53,7 +54,7 @@ class FDInfoCollector
 
     std::unordered_map<int, FDInfo> dmabuf_map_;
 
-    std::unordered_map<int, FDInfo> all_map_;
+    //std::vector<FDIssue> all_issue;
 
     int GetType(int fd);
 
@@ -62,7 +63,7 @@ class FDInfoCollector
     void RemoveImpl(int fd, std::unordered_map<int, FDInfo> &map);
 
     void GetMapsInfo();
-    void GetAllMapsIssues();
+    void BuildIssueList(std::vector<FDIssue> _all_issue);
     
 };
 } // namespace fdcanary

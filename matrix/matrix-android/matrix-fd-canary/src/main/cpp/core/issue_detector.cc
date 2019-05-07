@@ -35,22 +35,18 @@ namespace fdcanary {
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "IssueDetector::SetIssuedCallback");
     }
 
-    void IssueDetector::PublishIssue(std::unordered_map<int, FDInfo> all_map_) {
-        // todo
-        if (has_publish_issue && all_map_.size() == 0) {
+    void IssueDetector::PublishIssue(std::vector<FDIssue> issues) {
+
+        if (has_publish_issue && issues.size() == 0) {
             return;
         }
         
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "IssueDetector::PublishIssue,size:[%zu]", all_map_.size());
-        for(std::unordered_map<int, FDInfo>::iterator iter = all_map_.begin(); iter != all_map_.end(); iter++) {   
-            FDIssue issue(iter->second);
-            issues.push_back(issue);
-        }
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "IssueDetector::PublishIssue,size:[%zu]", issues.size());
+        
         if (issued_callback_) {
             issued_callback_(issues);
         }
         has_publish_issue = true;
-        issues.clear();
     }
 
     bool IssueDetector::CheckLimit(int fd) {

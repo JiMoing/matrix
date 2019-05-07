@@ -37,9 +37,10 @@ namespace fdcanary {
         }
 
         if(issue_detector_.CheckLimit(fd)) {
-            //todo 
-             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen Exceed the upper limit fd:[%d]", fd);
-            issue_detector_.PublishIssue(io_map_);
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen Exceed the upper limit fd:[%d]", fd);
+            std::vector<FDIssue> all_issue;
+            BuildIssueList(all_issue);
+            issue_detector_.PublishIssue(all_issue);
         }
     }
 
@@ -116,7 +117,36 @@ namespace fdcanary {
         
     }
 
-    void FDInfoCollector::GetAllMapsIssues() {
+    void FDInfoCollector::BuildIssueList(std::vector<FDIssue> _all_issue) {
+        if (io_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = io_map_.begin(); iter != io_map_.end(); iter++) {
+                FDIssue issue(iter->second);
+                _all_issue.push_back(issue);
+            }
+        }
+
+        if (pipe_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = pipe_map_.begin(); iter != pipe_map_.end(); iter++) {
+                FDIssue issue(iter->second);
+                _all_issue.push_back(issue);
+            }
+        }
+        
+        if (socket_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = socket_map_.begin(); iter != socket_map_.end(); iter++) {
+                FDIssue issue(iter->second);
+                _all_issue.push_back(issue);
+            }
+        }
+        
+        if (dmabuf_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
+                FDIssue issue(iter->second);
+                _all_issue.push_back(issue);
+            }
+        }
+
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::BuildIssueList: size:[%zu]", _all_issue.size());
         
     }
 
