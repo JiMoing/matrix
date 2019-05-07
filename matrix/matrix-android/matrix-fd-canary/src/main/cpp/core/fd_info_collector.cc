@@ -25,11 +25,21 @@
 
 namespace fdcanary {
 
+    void FDInfoCollector::SetIssueDetector(IssueDetector &issue_detector) {
+        issue_detector_ = issue_detector;
+    }
+
     void FDInfoCollector::OnOpen(int fd, std::string &stack) {
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen fd:[%d]", fd);
         int type = GetType(fd);
         if (type != -1) {
             InsertTypeMap(type, fd, stack);
+        }
+
+        if(issue_detector_.CheckLimit(fd)) {
+            //todo 
+             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen Exceed the upper limit fd:[%d]", fd);
+            issue_detector_.PublishIssue(io_map_);
         }
     }
 
@@ -52,7 +62,7 @@ namespace fdcanary {
         str.append(temp_size_1);
         if (pipe_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, std::string>::iterator iter = pipe_map_.begin(); iter != pipe_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = pipe_map_.begin(); iter != pipe_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -66,7 +76,7 @@ namespace fdcanary {
         str.append(temp_size_2);
         if (dmabuf_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, std::string>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -79,7 +89,7 @@ namespace fdcanary {
         str.append(temp_size_3);
         if (io_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, std::string>::iterator iter = io_map_.begin(); iter != io_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = io_map_.begin(); iter != io_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -92,7 +102,7 @@ namespace fdcanary {
         str.append(temp_size_4);
         if (socket_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, std::string>::iterator iter = socket_map_.begin(); iter != socket_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = socket_map_.begin(); iter != socket_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -106,6 +116,10 @@ namespace fdcanary {
         
     }
 
+    void FDInfoCollector::GetAllMapsIssues() {
+        
+    }
+
     int FDInfoCollector::GetType(int fd) {
         int type;
         int flags = fcntl(fd, F_GETFD, 0);
@@ -113,7 +127,6 @@ namespace fdcanary {
             struct stat statbuf;
             if (fstat(fd, &statbuf) == 0) {
                 type = (S_IFMT & statbuf.st_mode);
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::GetType type is [%d]", type);
                 return type;
             }
         } else {
@@ -124,27 +137,37 @@ namespace fdcanary {
 
     void FDInfoCollector::InsertTypeMap(int type, int fd, std::string &stack) {
         switch (type) {
-            case S_IFIFO:
+            case S_IFIFO: {
                 //命名管道
-                pipe_map_.insert(std::make_pair(fd, stack));
+                FDInfo fdinfo1(fd, FDIssueType::kFDPIPE, stack);
+                pipe_map_.insert(std::make_pair(fd, fdinfo1));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (named pipe) | fd is [%d]]", fd);
                 break;
-            case S_IFCHR:
+            }
+                
+            case S_IFCHR: {
                 // 字符设备（串行端口）
-                dmabuf_map_.insert(std::make_pair(fd, stack));
+                FDInfo fdinfo2(fd, FDIssueType::kFDDmabuf, stack);
+                dmabuf_map_.insert(std::make_pair(fd, fdinfo2));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (character special) | fd is [%d]]", fd);
                 break;
-            case S_IFREG:
+            }
+                
+            case S_IFREG: {
                 //普通文件
-                io_map_.insert(std::make_pair(fd, stack));
+                FDInfo fdinfo3(fd, FDIssueType::kFDIO, stack);
+                io_map_.insert(std::make_pair(fd, fdinfo3));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (regular) | fd is [%d]]", fd);    
                 break;
-            case S_IFSOCK:
+            }
+                
+            case S_IFSOCK: {
                 //socket 
-                socket_map_.insert(std::make_pair(fd, stack));
+                FDInfo fdinfo4(fd, FDIssueType::kFDSocket, stack);
+                socket_map_.insert(std::make_pair(fd, fdinfo4));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (socket) | fd is [%d]]", fd);
                 break;
-                
+            } 
             case S_IFDIR:
                 //目录
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "directory");
@@ -207,12 +230,12 @@ namespace fdcanary {
         }
     }
 
-    void FDInfoCollector::RemoveImpl(int fd, std::unordered_map<int, std::string> &map) {
-        std::unordered_map<int, std::string>::iterator it;
+    void FDInfoCollector::RemoveImpl(int fd, std::unordered_map<int, FDInfo> &map) {
+        std::unordered_map<int, FDInfo>::iterator it;
         it = map.find(fd);
         if (it != map.end()) {
             map.erase(fd);
-           __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::RemoveImpl erase success, fd is [%d], current size is [%zu], value is [%s]", fd, map.size(), it->second.c_str());
+           __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::RemoveImpl erase success, fd is [%d], current size is [%zu]", fd, map.size());
         } else {
            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::RemoveImpl erase fail, fd is [%d], current size is [%zu]", fd, map.size());
         }

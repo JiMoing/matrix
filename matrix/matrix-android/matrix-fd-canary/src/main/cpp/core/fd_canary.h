@@ -24,34 +24,11 @@
 #include <vector>
 #include <string>
 #include "fd_info_collector.h"
+#include "issue_detector.h"
 #include "call_stack.h"
 
 namespace fdcanary {
-    typedef enum {
-        kFDIO = 1,
-        kFDSocket,
-        kFDPIPE,
-        kFDDmabuf
-    } FDIssueType ;
-
-    class Issue {
-    public:
-        //Issue(FDIssueType type, FDInfo &file_fd_info);
-
-        Issue(FDIssueType type, std::string &task);
-
-        const FDIssueType type_;
-        //const FDInfo file_fd_info_;
-        const std::string key_;
-
-        int repeat_read_cnt_;
-        std::string stack_;
-    private:
-        static std::string GenKey(const FDInfo& file_fd_info);
-    };
-
-    typedef void(*OnPublishIssueCallback) (const std::vector<Issue>& published_issues);
-
+    
     class FDCanary {
     public:
         FDCanary(const FDCanary&) = delete;
@@ -69,18 +46,16 @@ namespace fdcanary {
         FDCanary();
         ~FDCanary();
 
-        void PublishIssue();
+        
         void OfferFileFDInfo(std::shared_ptr<FDInfo> file_fd_info);
         int TakeFileFDInfo(std::shared_ptr<FDInfo>& file_fd_info);
         void Detect();
 
         bool exit_;
-        int publish_count_;
 
-        OnPublishIssueCallback issued_callback_;
-        std::vector<Issue> issues;
 
         FDInfoCollector collector_;
+        IssueDetector issue_detector_;
         CallStack call_stack_;
         std::deque<std::shared_ptr<FDInfo>> queue_;
         std::mutex queue_mutex_;

@@ -121,7 +121,7 @@ extern "C"
         return ret;
     }
 
-    void OnIssuePublish(const std::vector<Issue> &published_issues)
+    void OnIssuePublish(const std::vector<FDIssue> &published_issues)
         {
             if (!kInitSuc)
             {
@@ -162,9 +162,8 @@ extern "C"
 
             for (const auto &issue : published_issues)
             {
-                jint type = issue.type_;
-                jstring stack = env->NewStringUTF(issue.stack_.c_str());
-                jint repeat_read_cnt = issue.repeat_read_cnt_;
+                jint type = issue.fdinfo_.fd_type_;
+                jstring stack = env->NewStringUTF(issue.fdinfo_.stack_.c_str());
 
                 //jobject issue_obj = env->NewObject(kIssueClass, kMethodIDIssueConstruct, type, path, file_size, op_cnt, buffer_size, op_cost_time, op_type, op_size, thread_name, stack, repeat_read_cnt);
                 jobject issue_obj = env->NewObject(kIssueClass, kMethodIDIssueConstruct2, type, stack);

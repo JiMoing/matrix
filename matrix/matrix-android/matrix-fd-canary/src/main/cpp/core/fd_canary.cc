@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-//
-// Created by liyongjie on 2017/12/7.
-//
-
 #include "fd_canary.h"
 #include <thread>
 #include <android/log.h>
@@ -36,7 +32,8 @@ namespace fdcanary {
     }
 
     void FDCanary::SetIssuedCallback(OnPublishIssueCallback issued_callback) {
-        issued_callback_ = issued_callback;
+        issue_detector_.SetIssuedCallback(issued_callback);
+        collector_.SetIssueDetector(issue_detector_);
     }
 
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
@@ -45,7 +42,6 @@ namespace fdcanary {
         std::string value;
         dumpStack(value);
         collector_.OnOpen(open_ret, value);
-        PublishIssue();
     }
 
     void FDCanary::AshmemCreateRegion(const char *name, size_t size, int fd) {
@@ -76,20 +72,7 @@ namespace fdcanary {
         //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s, ", stack.c_str());    
     }
 
-    void FDCanary::PublishIssue() {
-        if (publish_count_ >= 3) {
-            return;
-        }
-        publish_count_++;
-        std::string stack;
-        dumpStack(stack);
 
-        Issue issue(FDIssueType::kFDIO, stack);
-        issues.push_back(issue);
-        if (issued_callback_) {
-            issued_callback_(issues);
-        }
-    }
 
    /*void FDCanary::OfferFileFDInfo(std::shared_ptr<FDInfo> file_fd_info) {
         std::unique_lock<std::mutex> lock(queue_mutex_);
@@ -146,7 +129,5 @@ namespace fdcanary {
         //detectors_.clear();
     }
 
-    Issue::Issue(FDIssueType _type, std::string &_stack):type_(_type),stack_(_stack) {
 
-    }
 }
