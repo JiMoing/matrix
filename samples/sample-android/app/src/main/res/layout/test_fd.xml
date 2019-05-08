@@ -37,6 +37,14 @@
         android:onClick="onClick"
         android:text="looper" />
     <Button
+        android:id="@+id/exit_looper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minWidth="200dp"
+        android:onClick="onClick"
+        android:text="exit_looper" />
+    <Button
         android:id="@+id/cursor"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

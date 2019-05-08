@@ -36,7 +36,8 @@ static int (*original_open)(const char *pathname, int flags, mode_t mode);
 static int (*original_open64)(const char *pathname, int flags, mode_t mode);
 static int (*original_close)(int fd);
 static int (*original_ashmem_create_region) (const char *name, size_t size);
-
+static int (*original_epoll_create) (int size);
+static void (*original_rebuildEpollLocked) ();
 
 static bool kInitSuc = false;
 static JavaVM *kJvm;
@@ -56,13 +57,6 @@ static jmethodID kMethodIDIssueConstruct2;
 static jclass kListClass;
 static jmethodID kMethodIDListConstruct;
 static jmethodID kMethodIDListAdd;
-
-const static char *TARGET_MODULES[] = {
-    "libopenjdkjvm.so",
-    "libjavacore.so",
-    "libopenjdk.so",
-};
-const static size_t TARGET_MODULE_COUNT = sizeof(TARGET_MODULES) / sizeof(char *);
 
 const static char *TARGET_MODULES_2[] = {
     "libopenjdkjvm.so", //io相关
@@ -84,6 +78,17 @@ const static char *TARGET_MODULES_ASHMEM[] = {
     "libcutils.so",
 };
 const static size_t TARGET_MODULE_COUNT_ASHMEM = sizeof(TARGET_MODULES_ASHMEM) / sizeof(char *);
+
+const static char *TARGET_MODULES_EPOLL[] = {
+    "libandroid_servers.so",
+    "libutils.so",
+    "libc.so",
+    "libevent.so",
+    "libopenjdk.so",
+
+    //"libbinder.so",
+};
+const static size_t TARGET_MODULE_COUNT_EPOLL = sizeof(TARGET_MODULES_EPOLL) / sizeof(char *);
 
 extern "C"
 {
@@ -275,6 +280,18 @@ extern "C"
         return result;
     }
 
+    int ProxyEpollCreate(int size) {
+        int epoll_fd = original_epoll_create(size);
+
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyEpollCreate epoll_fd is %d", epoll_fd);
+        return epoll_fd;
+    }
+
+    void ProxyRebuildEpollLocked() {
+
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyEpollCreate ProxyRebuildEpollLocked ");
+    }
+
     void dumpFdInfo()
     {
         time_t t1;
@@ -293,36 +310,7 @@ extern "C"
         __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "dumpFdInfo t1:[%ld], t2:[%ld], speed time:%ld",t1, t2, (t2-t1));
     }
 
-    void proxyAshmem() {
-        for (int i = 0; i < TARGET_MODULE_COUNT_ASHMEM; i++)
-        {
-            const char *so_name = TARGET_MODULES_ASHMEM[i];
-            __android_log_print(ANDROID_LOG_INFO, kTag, "proxyAshmem try to hook function in %s.", so_name);
-
-            loaded_soinfo *soinfo = elfhook_open(so_name);
-            if (!soinfo)
-            {
-                __android_log_print(ANDROID_LOG_WARN, kTag, "Failure to open %s, try next.", so_name);
-                continue;
-            }
-
-            int result1 = elfhook_replace(soinfo, "ashmem_create_region", (void *)ProxyAshMemCreateRegion, (void **)&original_ashmem_create_region);
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d",
-                                result1);
-        } 
-    }
-
-    JNIEXPORT void JNICALL
-    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_dumpFdInfo(JNIEnv *env, jclass type)
-    {
-        dumpFdInfo();
-    }
-
-    JNIEXPORT jboolean JNICALL
-    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_doHook(JNIEnv *env, jclass type)
-    {
-        __android_log_print(ANDROID_LOG_INFO, kTag, "doHook");
-
+    void HookIo() {
         for (int i = 0; i < TARGET_MODULE_COUNT_2; i++)
         {
             const char *so_name = TARGET_MODULES_2[i];
@@ -338,14 +326,68 @@ extern "C"
             int result1 = elfhook_replace(soinfo, "open", (void *)ProxyOpen, (void **)&original_open);
             int result2 = elfhook_replace(soinfo, "open64", (void *)ProxyOpen64, (void **)&original_open64);
             int result3 = elfhook_replace(soinfo, "close", (void*)ProxyClose, (void**)&original_close);
+            int result4 = elfhook_replace(soinfo, "epoll_create", (void *)ProxyEpollCreate, (void **)&original_epoll_create);
             //int result4 = elfhook_replace(soinfo, "socket", (void *)ProxyOpen, (void **)&original_open);
             //int result5 = elfhook_replace(soinfo, "socket_close", (void *)ProxyOpen, (void **)&original_open);
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
-                                result1, result2, result3);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d, result4:%d",
+                                result1, result2, result3, result4);
         }
-        std::string stack;
-        fdcanary::FDCanary::Get().dumpStack(stack);
-        proxyAshmem();
+    }
+
+    void HookAshmem() {
+        for (int i = 0; i < TARGET_MODULE_COUNT_ASHMEM; i++)
+        {
+            const char *so_name = TARGET_MODULES_ASHMEM[i];
+            __android_log_print(ANDROID_LOG_INFO, kTag, "proxyAshmem try to hook function in %s.", so_name);
+
+            loaded_soinfo *soinfo = elfhook_open(so_name);
+            if (!soinfo)
+            {
+                __android_log_print(ANDROID_LOG_WARN, kTag, "Failure to open %s, try next.", so_name);
+                continue;
+            }
+
+            int result = elfhook_replace(soinfo, "ashmem_create_region", (void *)ProxyAshMemCreateRegion, (void **)&original_ashmem_create_region);
+            int result1 = elfhook_replace(soinfo, "epoll_create", (void *)ProxyEpollCreate, (void **)&original_epoll_create);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d, result1:%d",
+                                result, result1);
+        } 
+    }
+
+    //try to hook epoll fail
+    void HookEpoll() {
+        for (int i = 0; i < TARGET_MODULE_COUNT_EPOLL; i ++) {
+            const char *so_name = TARGET_MODULES_EPOLL[i];
+            __android_log_print(ANDROID_LOG_INFO, kTag, "HookEpoll try to hook function in %s.", so_name);
+
+            loaded_soinfo *soinfo = elfhook_open(so_name);
+            if (!soinfo)
+            {
+                __android_log_print(ANDROID_LOG_WARN, kTag, "Failure to open %s, try next.", so_name);
+                continue;
+            }
+
+            int result = elfhook_replace(soinfo, "epoll_create", (void *)ProxyEpollCreate, (void **)&original_epoll_create);
+            int result1 = elfhook_replace(soinfo, "rebuildEpollLocked", (void *)ProxyRebuildEpollLocked, (void **)&original_rebuildEpollLocked);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d,result1:%d", result, result1);
+        }
+    }
+
+    JNIEXPORT void JNICALL
+    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_dumpFdInfo(JNIEnv *env, jclass type)
+    {
+        dumpFdInfo();
+    }
+
+    JNIEXPORT jboolean JNICALL
+    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_doHook(JNIEnv *env, jclass type)
+    {
+        __android_log_print(ANDROID_LOG_INFO, kTag, "doHook");
+
+        
+        HookIo();
+        HookAshmem();
+        HookEpoll();
         return true;
     }
 
@@ -365,6 +407,7 @@ extern "C"
             elfhook_replace(soinfo, "open64", (void *)original_open64, nullptr);
             elfhook_replace(soinfo, "close", (void *)original_close, nullptr);
             elfhook_replace(soinfo, "ashmem_create_region", (void *)original_ashmem_create_region, nullptr);
+            elfhook_replace(soinfo, "epoll_create", (void *)original_epoll_create, nullptr);
             //elfhook_replace(soinfo, "socket", (void *)original_close, nullptr);
             //elfhook_replace(soinfo, "socket_close", (void *)original_close, nullptr);
             elfhook_close(soinfo);

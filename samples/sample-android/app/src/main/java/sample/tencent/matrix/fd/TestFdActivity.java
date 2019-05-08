@@ -56,6 +56,7 @@ public class TestFdActivity extends Activity {
     private static final int EXTERNAL_STORAGE_REQ_CODE = 0x1;
 
     private List<AlertDialog> dialogs = new ArrayList<>();
+    private List<Looper> loopers = new ArrayList<>();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,6 +109,8 @@ public class TestFdActivity extends Activity {
             testThread();
         } else if (v.getId() == R.id.looper) {
             testLooper();
+        } else if (v.getId() == R.id.exit_looper) {
+            exitLooper();
         } else if (v.getId() == R.id.cursor) {
             testCursor();
         } else if (v.getId() == R.id.dump) {
@@ -144,7 +147,7 @@ public class TestFdActivity extends Activity {
 
     private void testThread() {
 
-        for (int i = 0; i < 100; i ++) {
+        for (int i = 0; i < 10; i ++) {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
@@ -163,14 +166,17 @@ public class TestFdActivity extends Activity {
 
     private void testLooper() {
 
-        for (int i = 0; i < 100; i ++) {
+        for (int i = 0; i < 10; i ++) {
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
 
-                    Log.d(TAG, "testLooper id: " + Thread.currentThread());
 
                     Looper.prepare();
+                    Looper looper = Looper.myLooper();
+                    loopers.add(looper);
+                    Log.d(TAG, "testLooper id: " + Thread.currentThread() + " Loopers size is " + loopers.size());
+
                     Looper.loop();
                 }
             });
@@ -179,8 +185,16 @@ public class TestFdActivity extends Activity {
         }
     }
 
+    private void exitLooper() {
+        Log.d(TAG, "exitLooper size is" + loopers.size());
+        for (Looper looper : loopers) {
+            looper.quitSafely();
+            Log.d(TAG, "exitLooper");
+        }
+    }
+
     private void testCursor() {
-        for (int i = 0; i < 100; i ++) {
+        for (int i = 0; i < 10; i ++) {
             Uri uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
             ContentResolver cr = this.getContentResolver();//mContext是一个Context对象
             Cursor cs = cr.query(uri, null, null, null, null);

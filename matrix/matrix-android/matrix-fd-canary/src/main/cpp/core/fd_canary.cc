@@ -38,7 +38,7 @@ namespace fdcanary {
 
     void FDCanary::OnOpen(const char *pathname, int flags, mode_t mode,
                           int open_ret, const JavaContext& java_context) {
-        
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDCanary::OnOpen");
         std::string value;
         dumpStack(value);
         collector_.OnOpen(open_ret, value);
