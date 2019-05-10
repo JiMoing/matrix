@@ -41,6 +41,8 @@ namespace fdcanary {
         void OnOpen(const char *pathname, int flags, mode_t mode, int open_ret, const JavaContext& java_context);
         void AshmemCreateRegion(const char *name, size_t size, int fd);
         void OnClose(int fd);
+        void Socket(int fd);
+        void ShutDown(int fd);
         void dumpStack(std::string& stack);
     private:
         FDCanary();

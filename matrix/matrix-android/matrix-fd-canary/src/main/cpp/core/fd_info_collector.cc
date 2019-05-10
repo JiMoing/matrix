@@ -29,16 +29,16 @@ namespace fdcanary {
         issue_detector_ = issue_detector;
     }
 
-    void FDInfoCollector::OnOpen(int fd, std::string &stack) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen fd:[%d]", fd);
+    void FDInfoCollector::OnPut(int fd, std::string &stack) {
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnPut fd:[%d]", fd);
         int type = GetType(fd);
         if (type != -1) {
             InsertTypeMap(type, fd, stack);
         }
-
+        GetMapsInfo();
         if(issue_detector_.CheckLimit(fd)) {
             GetMapsInfo();
-            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnOpen Exceed the upper limit fd:[%d]", fd);
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnPut Exceed the upper limit fd:[%d]", fd);
             std::vector<FDIssue> all_issue;
             BuildIssueList(all_issue);
             issue_detector_.PublishIssue(all_issue);
@@ -46,8 +46,8 @@ namespace fdcanary {
     }
 
 
-    void FDInfoCollector::OnClose(int fd) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnClose fd:[%d]", fd);
+    void FDInfoCollector::OnErase(int fd) {
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnErase fd:[%d]", fd);
         int type = GetType(fd);
         if (type != -1) {
             RemoveTypeMap(type, fd);

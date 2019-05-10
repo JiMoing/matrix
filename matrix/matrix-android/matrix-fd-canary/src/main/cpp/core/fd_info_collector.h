@@ -36,8 +36,8 @@ namespace fdcanary
 class FDInfoCollector
 {
   public:
-    void OnOpen(int fd, std::string &stack);
-    void OnClose(int fd);
+    void OnPut(int fd, std::string &stack);
+    void OnErase(int fd);
 
     void SetIssueDetector(IssueDetector &issue_detector);
 

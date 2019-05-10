@@ -304,6 +304,8 @@ extern "C"
         int ret = original_socket(domain, type, protocol);
 
         __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxySocket domain:%d, type:%d, protocol:%d, ret:%d",domain, type, protocol, ret);
+        fdcanary::FDCanary::Get().Socket(ret);
+
         return ret;
     }
 
@@ -312,6 +314,7 @@ extern "C"
         int ret = original_shutdown(s, how);
 
         __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyShutDown s:%d, how:%d, ret:%d", s, how, ret);
+        fdcanary::FDCanary::Get().ShutDown(ret);
         return ret;
     }
 

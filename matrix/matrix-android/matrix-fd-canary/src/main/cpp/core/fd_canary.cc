@@ -41,7 +41,7 @@ namespace fdcanary {
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDCanary::OnOpen");
         std::string value;
         dumpStack(value);
-        collector_.OnOpen(open_ret, value);
+        collector_.OnPut(open_ret, value);
     }
 
     void FDCanary::AshmemCreateRegion(const char *name, size_t size, int fd) {
@@ -49,16 +49,27 @@ namespace fdcanary {
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyAshMemCreateRegion name:%s, size:%zu, fd:%d", name, size, fd);
         std::string value;
         dumpStack(value);
-        collector_.OnOpen(fd, value);
+        collector_.OnPut(fd, value);
     }
 
     void FDCanary::OnClose(int fd) {
         
-        collector_.OnClose(fd);
+        collector_.OnErase(fd);
         //dumpStack();
         //todo 调用太多了
         
         //OfferFileFDInfo(info);
+    }
+
+    void FDCanary::Socket(int fd) {
+        std::string value;
+        dumpStack(value);
+        collector_.OnPut(fd, value);
+    }
+
+    void FDCanary::ShutDown(int fd) {
+
+        collector_.OnErase(fd);
     }
 
     void FDCanary::dumpStack(std::string& stack) {
