@@ -41,9 +41,14 @@ import com.tencent.matrix.plugin.Plugin;
 import com.tencent.matrix.util.MatrixLog;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -113,6 +118,8 @@ public class TestFdActivity extends Activity {
             exitLooper();
         } else if (v.getId() == R.id.cursor) {
             testCursor();
+        } else if (v.getId() == R.id.socket) {
+            testSocket();
         } else if (v.getId() == R.id.dump) {
             FDCanaryJniBridge.dumpFdInfo();
         }
@@ -199,6 +206,44 @@ public class TestFdActivity extends Activity {
             ContentResolver cr = this.getContentResolver();//mContext是一个Context对象
             Cursor cs = cr.query(uri, null, null, null, null);
         }
+    }
+
+    private void testSocket() {
+        for (int i = 0; i < 5; i ++) {
+            Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    Socket socket;
+                    try {// 创建一个Socket对象，并指定服务端的IP及端口号
+                        socket = new Socket("192.168.1.32", 1989);
+                        // 创建一个InputStream用户读取要发送的文件。
+                        InputStream inputStream = new FileInputStream("e://a.txt");
+                        // 获取Socket的OutputStream对象用于发送数据。
+                        OutputStream outputStream = socket.getOutputStream();
+                        // 创建一个byte类型的buffer字节数组，用于存放读取的本地文件
+                        byte buffer[] = new byte[4 * 1024];
+                        int temp = 0;
+                        // 循环读取文件
+                        while ((temp = inputStream.read(buffer)) != -1) {
+                            // 把数据写入到OuputStream对象中
+                            outputStream.write(buffer, 0, temp);
+                        }
+                        // 发送读取的数据到服务端
+                        outputStream.flush();
+
+                    } catch (UnknownHostException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+
+            thread.start();
+
+        }
+
     }
 
     private void writeSth() {

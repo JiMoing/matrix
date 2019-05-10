@@ -53,6 +53,14 @@
         android:onClick="onClick"
         android:text="cursor" />
     <Button
+        android:id="@+id/socket"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:minWidth="200dp"
+        android:onClick="onClick"
+        android:text="socket" />
+    <Button
         android:id="@+id/dump"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
