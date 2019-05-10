@@ -74,11 +74,11 @@ namespace fdcanary {
 
         
         char temp_size_2[50];
-        sprintf(temp_size_2, "dmabuf_map_:size: %zu ", dmabuf_map_.size());
+        sprintf(temp_size_2, "character_special_map_:size: %zu ", character_special_map_.size());
         str.append(temp_size_2);
-        if (dmabuf_map_.size() > 0) {
+        if (character_special_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, FDInfo>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = character_special_map_.begin(); iter != character_special_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -140,8 +140,8 @@ namespace fdcanary {
             }
         }
         
-        if (dmabuf_map_.size() > 0) {
-            for(std::unordered_map<int, FDInfo>::iterator iter = dmabuf_map_.begin(); iter != dmabuf_map_.end(); iter++) {
+        if (character_special_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = character_special_map_.begin(); iter != character_special_map_.end(); iter++) {
                 FDIssue issue(iter->second);
                 _all_issue.push_back(issue);
             }
@@ -178,8 +178,8 @@ namespace fdcanary {
                 
             case S_IFCHR: {
                 // 字符设备（串行端口）
-                FDInfo fdinfo2(fd, FDIssueType::kFDDmabuf, stack);
-                dmabuf_map_.insert(std::make_pair(fd, fdinfo2));
+                FDInfo fdinfo2(fd, FDIssueType::kCharacterSpecial, stack);
+                character_special_map_.insert(std::make_pair(fd, fdinfo2));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (character special) | fd is [%d]]", fd);
                 break;
             }
@@ -227,7 +227,7 @@ namespace fdcanary {
                 break;
             case S_IFCHR:
                 // 字符设备（串行端口）
-                RemoveImpl(fd, dmabuf_map_);
+                RemoveImpl(fd, character_special_map_);
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (character special) | fd is [%d]]", fd);
                 break;
             case S_IFREG:

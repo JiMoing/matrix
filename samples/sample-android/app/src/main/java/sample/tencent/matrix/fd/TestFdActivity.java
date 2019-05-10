@@ -126,7 +126,7 @@ public class TestFdActivity extends Activity {
     }
 
     public void testInputChannel() {
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 1; i++) {
             //recount();
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
             // 设置参数

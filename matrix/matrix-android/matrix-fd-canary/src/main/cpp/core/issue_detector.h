@@ -23,10 +23,11 @@
 #include <unordered_map>
 namespace fdcanary {
     typedef enum {
-        kFDIO = 1,
-        kFDSocket,
-        kFDPIPE,
-        kFDDmabuf
+        kFDIO = 1,//io
+        kFDSocket,//socket
+        kFDPIPE,//pipe
+        kFDDmabuf,//todo
+        kCharacterSpecial, //inputchannel（ashmem）
     } FDIssueType ;
 
     class JavaContext

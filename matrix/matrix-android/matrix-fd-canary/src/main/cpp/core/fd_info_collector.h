@@ -54,6 +54,8 @@ class FDInfoCollector
 
     std::unordered_map<int, FDInfo> dmabuf_map_;
 
+    std::unordered_map<int, FDInfo> character_special_map_;
+
     //std::vector<FDIssue> all_issue;
 
     int GetType(int fd);
