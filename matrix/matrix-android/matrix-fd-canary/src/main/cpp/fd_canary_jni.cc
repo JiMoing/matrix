@@ -37,7 +37,6 @@ static int (*original_open64)(const char *pathname, int flags, mode_t mode);
 static int (*original_close)(int fd);
 static int (*original_ashmem_create_region) (const char *name, size_t size);
 static int (*original_epoll_create) (int size);
-static int (*original_sock_map_fd) (struct socket *sock, int flags);
 static int (*original_socket) (int domain,int type,int protocol);
 static int (*original_shutdown) (int s,int how);
 
@@ -60,7 +59,7 @@ static jclass kListClass;
 static jmethodID kMethodIDListConstruct;
 static jmethodID kMethodIDListAdd;
 
-const static char *TARGET_MODULES_2[] = {
+const static char *TARGET_MODULES_IO[] = {
     "libopenjdkjvm.so", //io相关
     "libjavacore.so",
     "libopenjdk.so",
@@ -70,7 +69,7 @@ const static char *TARGET_MODULES_2[] = {
     //"libbinder.so",
     "libcutils.so"
 };
-const static size_t TARGET_MODULE_COUNT_2 = sizeof(TARGET_MODULES_2) / sizeof(char *);
+const static size_t TARGET_MODULE_COUNT_IO = sizeof(TARGET_MODULES_IO) / sizeof(char *);
 
 const static char *TARGET_MODULES_ASHMEM[] = {
     "libandroid_runtime.so",
@@ -85,7 +84,6 @@ const static char *TARGET_MODULES_EPOLL[] = {
     //"libandroid_servers.so",
     "libutils.so",
     "libc.so",
-    "libevent.so",
     "libopenjdk.so",
 
     //"libbinder.so",
@@ -240,7 +238,7 @@ extern "C"
           }*/
 
          int ret = original_open(pathname, flags, mode);
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen");
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen pathname:%s, flags:%d, ret:%d", pathname, flags, ret);
          if (ret != -1)
          {
              DoProxyOpenLogic(pathname, flags, mode, ret);
@@ -255,9 +253,9 @@ extern "C"
             __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen64 not main thread");
             return original_open64(pathname, flags, mode);
         }*/
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen64");
         int ret = original_open64(pathname, flags, mode);
 
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyOpen64 pathname:%s, flags:%d, ret:%d", pathname, flags, ret);
         if (ret != -1)
         {
             DoProxyOpenLogic(pathname, flags, mode, ret);
@@ -277,7 +275,7 @@ extern "C"
             return original_close(fd);
         }*/
 
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose");
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyClose fd:%d", fd);
         fdcanary::FDCanary::Get().OnClose(fd);
         int ret = original_close(fd);
 
@@ -288,34 +286,32 @@ extern "C"
 
     int ProxyAshMemCreateRegion(const char *name, size_t size) {
         
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyAshMemCreateRegion");
         int result = original_ashmem_create_region(name, size);
 
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyAshMemCreateRegion， name:%s,size:%zu,result:%d", name, size, result);
         fdcanary::FDCanary::Get().AshmemCreateRegion(name, size, result);
         return result;
     }
 
     int ProxyEpollCreate(int size) {
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyEpollCreate");
         int epoll_fd = original_epoll_create(size);
-
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "ProxyEpollCreate epoll_fd is %d", epoll_fd);
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyEpollCreate, epoll_fd:%d", epoll_fd);
         return epoll_fd;
     }
 
     int ProxySocket(int domain,int type,int protocol) {
 
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxySocket");
-        int fd = original_socket(domain, type, protocol);
+        int ret = original_socket(domain, type, protocol);
 
-        return fd;
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxySocket domain:%d, type:%d, protocol:%d, ret:%d",domain, type, protocol, ret);
+        return ret;
     }
 
     int ProxyShutDown(int s,int how) {
 
-        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyShutDown");
         int ret = original_shutdown(s, how);
 
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyShutDown s:%d, how:%d, ret:%d", s, how, ret);
         return ret;
     }
 
@@ -338,9 +334,9 @@ extern "C"
     }
 
     void HookIo() {
-        for (int i = 0; i < TARGET_MODULE_COUNT_2; i++)
+        for (int i = 0; i < TARGET_MODULE_COUNT_IO; i++)
         {
-            const char *so_name = TARGET_MODULES_2[i];
+            const char *so_name = TARGET_MODULES_IO[i];
             __android_log_print(ANDROID_LOG_INFO, kTag, "try to hook function in %s.", so_name);
 
             loaded_soinfo *soinfo = elfhook_open(so_name);
@@ -353,9 +349,8 @@ extern "C"
             int result1 = elfhook_replace(soinfo, "open", (void *)ProxyOpen, (void **)&original_open);
             int result2 = elfhook_replace(soinfo, "open64", (void *)ProxyOpen64, (void **)&original_open64);
             int result3 = elfhook_replace(soinfo, "close", (void*)ProxyClose, (void**)&original_close);
-            int result4 = elfhook_replace(soinfo, "epoll_create", (void *)ProxyEpollCreate, (void **)&original_epoll_create);
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d, result4:%d",
-                                result1, result2, result3, result4);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result1:%d, result2:%d, result3:%d",
+                                result1, result2, result3);
         }
     }
 
@@ -373,9 +368,8 @@ extern "C"
             }
 
             int result = elfhook_replace(soinfo, "ashmem_create_region", (void *)ProxyAshMemCreateRegion, (void **)&original_ashmem_create_region);
-            int result1 = elfhook_replace(soinfo, "epoll_create", (void *)ProxyEpollCreate, (void **)&original_epoll_create);
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d, result1:%d",
-                                result, result1);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d",
+                                result);
         } 
     }
 
@@ -411,11 +405,9 @@ extern "C"
 
             int result = elfhook_replace(soinfo, "socket", (void *)ProxySocket, (void **)&original_socket);
             int result1 = elfhook_replace(soinfo, "shutdown", (void *)ProxyShutDown, (void **)&original_shutdown);
-            int result2 = elfhook_replace(soinfo, "sock_map_fd", (void *)ProxySocket, (void **)&original_sock_map_fd);
-            int result3 = elfhook_replace(soinfo, "socket_close", (void *)ProxyOpen, (void **)&original_open);
             
-            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d，result1:%d,result2:%d,result3:%d"
-            , result, result1, result2, result3);
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d，result1:%d"
+            , result, result1);
         }
     }
 
@@ -441,10 +433,11 @@ extern "C"
     JNIEXPORT jboolean JNICALL
     Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_doUnHook(JNIEnv *env, jclass type)
     {
+        //todo close的选择TARGET_MODULE_COUNT_IO
         __android_log_print(ANDROID_LOG_INFO, kTag, "doUnHook");
-        for (int i = 0; i < TARGET_MODULE_COUNT_2; ++i)
+        for (int i = 0; i < TARGET_MODULE_COUNT_IO; ++i)
         {
-            const char *so_name = TARGET_MODULES_2[i];
+            const char *so_name = TARGET_MODULES_IO[i];
             loaded_soinfo *soinfo = elfhook_open(so_name);
             if (!soinfo)
             {

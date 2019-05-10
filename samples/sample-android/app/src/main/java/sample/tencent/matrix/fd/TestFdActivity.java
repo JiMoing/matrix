@@ -209,7 +209,7 @@ public class TestFdActivity extends Activity {
     }
 
     private void testSocket() {
-        for (int i = 0; i < 5; i ++) {
+        for (int i = 0; i < 1; i ++) {
             Thread thread = new Thread() {
                 @Override
                 public void run() {
