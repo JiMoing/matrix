@@ -35,10 +35,16 @@ static const char *const kTag = "FDCanary.JNI";
 static int (*original_open)(const char *pathname, int flags, mode_t mode);
 static int (*original_open64)(const char *pathname, int flags, mode_t mode);
 static int (*original_close)(int fd);
+
 static int (*original_ashmem_create_region) (const char *name, size_t size);
+
 static int (*original_epoll_create) (int size);
+
 static int (*original_socket) (int domain,int type,int protocol);
 static int (*original_shutdown) (int s,int how);
+
+static int (*original_pipe) (int filedes[2]);
+static FILE* (*original_popen) (const char * command,const char * type);
 
 static bool kInitSuc = false;
 static JavaVM *kJvm;
@@ -101,6 +107,17 @@ const static char *TARGET_MODULES_SOCKET[] = {
 };
 const static size_t TARGET_MODULE_COUNT_SOCKET = sizeof(TARGET_MODULES_SOCKET) / sizeof(char *);
 
+const static char *TARGET_MODULES_PIPE[] = {
+    "libandroid_runtime.so",
+    "libandroid_servers.so",
+    "libart.so",
+    "libc.so",
+    "libopenjdk.so",
+    "libril.so"
+
+    //"libbinder.so",
+};
+const static size_t TARGET_MODULE_COUNT_PIPE = sizeof(TARGET_MODULES_PIPE) / sizeof(char *);
 extern "C"
 {
     /**
@@ -318,6 +335,21 @@ extern "C"
         return ret;
     }
 
+    int ProxyPipe(int filedes[2]) {
+        int ret = original_pipe(filedes);
+
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyPipe filedes[0]:%d, filedes[1]:%d, ret:%d", filedes[0], filedes[1], ret);
+
+        return ret;
+    }
+
+    FILE* ProxyPOpen(const char * command,const char * type) {
+        FILE* file = popen(command, type);
+
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "ProxyPOpen command:%s, type:%s", command, type);
+        return file;
+    }
+
     void dumpFdInfo()
     {
         time_t t1;
@@ -414,6 +446,26 @@ extern "C"
         }
     }
 
+    void HookPipe() {
+        for (int i = 0; i < TARGET_MODULE_COUNT_PIPE; i ++) {
+            const char *so_name = TARGET_MODULES_PIPE[i];
+            __android_log_print(ANDROID_LOG_INFO, kTag, "HookPipe try to hook function in %s.", so_name);
+
+            loaded_soinfo *soinfo = elfhook_open(so_name);
+            if (!soinfo)
+            {
+                __android_log_print(ANDROID_LOG_WARN, kTag, "Failure to open %s, try next.", so_name);
+                continue;
+            }
+
+            int result = elfhook_replace(soinfo, "pipe", (void *)ProxyPipe, (void **)&original_pipe);
+            int result1 = elfhook_replace(soinfo, "popen", (void *)ProxyPOpen, (void **)&original_popen);
+            
+            __android_log_print(ANDROID_LOG_WARN, kTag, "doHook hook elfhook_replace, result:%d, result1:%d"
+            , result,result1);
+        }
+    }
+
     JNIEXPORT void JNICALL
     Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_dumpFdInfo(JNIEnv *env, jclass type)
     {
@@ -430,6 +482,7 @@ extern "C"
         HookAshmem();
         HookEpoll();
         HookSocket();
+        HookPipe();
         return true;
     }
 
