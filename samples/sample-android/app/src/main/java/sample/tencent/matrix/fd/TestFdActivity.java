@@ -202,26 +202,28 @@ public class TestFdActivity extends Activity {
     }
 
     private void writeSth() {
-        try {
-            File f = new File("/sdcard/a.txt");
-            if (f.exists()) {
-                f.delete();
-            }
-            byte[] data = new byte[4096];
-            for (int i = 0; i < data.length; i++) {
-                data[i] = 'a';
-            }
-            FileOutputStream fos = new FileOutputStream(f);
-            for (int i = 0; i < 10; i++) {
-                fos.write(data);
-            }
+        for (int j = 0; j < 10; j ++) {
+            try {
+                File f = new File("/sdcard/a.txt");
+                if (f.exists()) {
+                    f.delete();
+                }
+                byte[] data = new byte[4096];
+                for (int i = 0; i < data.length; i++) {
+                    data[i] = 'a';
+                }
+                FileOutputStream fos = new FileOutputStream(f);
+                for (int i = 0; i < 10; i++) {
+                    fos.write(data);
+                }
 
-            fos.flush();
-            fos.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+                fos.flush();
+                fos.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
