@@ -145,4 +145,6 @@ public class FDCanaryJniBridge {
     private static native boolean doUnHook();
 
     public static native void dumpFdInfo();
+
+    public static native void nativeTestPIPE();
 }

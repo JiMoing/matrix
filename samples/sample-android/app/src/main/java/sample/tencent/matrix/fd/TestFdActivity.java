@@ -120,6 +120,8 @@ public class TestFdActivity extends Activity {
             testCursor();
         } else if (v.getId() == R.id.socket) {
             testSocket();
+        } else if (v.getId() == R.id.pipe) {
+            FDCanaryJniBridge.nativeTestPIPE();
         } else if (v.getId() == R.id.dump) {
             FDCanaryJniBridge.dumpFdInfo();
         }

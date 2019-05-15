@@ -21,6 +21,7 @@
 #include <jni.h>
 #include <cstddef>
 #include <android/log.h>
+#include <unistd.h>
 #include <assert.h>
 #include <time.h>
 #include "elf_hook.h"
@@ -108,14 +109,16 @@ const static char *TARGET_MODULES_SOCKET[] = {
 const static size_t TARGET_MODULE_COUNT_SOCKET = sizeof(TARGET_MODULES_SOCKET) / sizeof(char *);
 
 const static char *TARGET_MODULES_PIPE[] = {
+    
     "libandroid_runtime.so",
-    "libandroid_servers.so",
     "libart.so",
     "libc.so",
+    "libinputflinger.so",
+    "libjavacrypto.so",
     "libopenjdk.so",
-    "libril.so"
+    "libstagefright_foundation.so",
 
-    //"libbinder.so",
+    "libcutils.so",
 };
 const static size_t TARGET_MODULE_COUNT_PIPE = sizeof(TARGET_MODULES_PIPE) / sizeof(char *);
 extern "C"
@@ -466,12 +469,6 @@ extern "C"
         }
     }
 
-    JNIEXPORT void JNICALL
-    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_dumpFdInfo(JNIEnv *env, jclass type)
-    {
-        dumpFdInfo();
-    }
-
     JNIEXPORT jboolean JNICALL
     Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_doHook(JNIEnv *env, jclass type)
     {
@@ -623,5 +620,33 @@ extern "C"
             }
         }
     }
+
+    JNIEXPORT void JNICALL
+    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_dumpFdInfo(JNIEnv *env, jclass type)
+    {
+        dumpFdInfo();
+    }
+
+    //todo pipe not support
+    JNIEXPORT void JNICALL
+    Java_com_tencent_matrix_fdcanary_core_FDCanaryJniBridge_nativeTestPIPE(JNIEnv *env, jclass type) {
+
+        int filedes[2];
+        char buffer[80];
+        int result = pipe(filedes);
+
+        __android_log_print(ANDROID_LOG_DEBUG, kTag, "nativeTestPIPE result:[%d]", result);
+        if (fork() > 0) {
+            /* 父进程*/
+            char s[ ] = "hello!\n";
+            write(filedes[1],s,sizeof(s));
+            __android_log_print(ANDROID_LOG_DEBUG, kTag, "nativeTestPIPE buffer:%s", buffer);
+        } else {
+            read(filedes[0], buffer, 80);
+            __android_log_print(ANDROID_LOG_DEBUG, kTag, "nativeTestPIPE buffer:%s", buffer);
+        }
+        
+    }
+
 }
 } // namespace fdcanary
