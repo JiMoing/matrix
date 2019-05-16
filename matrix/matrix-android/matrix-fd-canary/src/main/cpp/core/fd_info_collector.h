@@ -61,6 +61,7 @@ class FDInfoCollector
     int GetType(int fd);
 
     void InsertTypeMap(int type, int fd, std::string &stack);
+    void InsertImpl(int fd, FDIssueType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map);
     void RemoveTypeMap(int type, int fd);
     void RemoveImpl(int fd, std::unordered_map<int, FDInfo> &map);
 

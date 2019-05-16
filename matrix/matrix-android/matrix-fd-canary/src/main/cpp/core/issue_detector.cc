@@ -18,8 +18,10 @@
 #include <android/log.h>
 
 namespace fdcanary {
-    //todo
-    static int kLimit = 90;
+    //总过fd限制 todo
+    static int kAllLimit = 900;
+    //每种类型fd限制
+    static int kSingleLimit = 50;
 
     IssueDetector::IssueDetector() {
 
@@ -35,7 +37,7 @@ namespace fdcanary {
         __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "IssueDetector::SetIssuedCallback");
     }
 
-    void IssueDetector::PublishIssue(std::vector<FDIssue> issues) {
+    void IssueDetector::PublishIssue(std::vector<FDIssue> &issues) {
 
         //todo issue多次调用
         if (has_publish_issue || issues.size() == 0) {
@@ -50,8 +52,12 @@ namespace fdcanary {
         has_publish_issue = true;
     }
 
-    bool IssueDetector::CheckLimit(int fd) {
-        return fd > kLimit; 
+    bool IssueDetector::CheckAllLimit(int fd) {
+        return fd > kAllLimit; 
+    }
+
+    bool IssueDetector::CheckSingleLimit(int _size) {
+        return _size > kSingleLimit;
     }
 
 

@@ -78,9 +78,11 @@ namespace fdcanary {
     public:
         IssueDetector();
         ~IssueDetector();
-        void SetIssuedCallback(OnPublishIssueCallback issued_callback);
-        bool CheckLimit(int fd);
-        void PublishIssue(std::vector<FDIssue> issues);
+        void SetIssuedCallback(OnPublishIssueCallback _issued_callback);
+        
+        void PublishIssue(std::vector<FDIssue> &_issues);
+        bool CheckAllLimit(int _fd);
+        bool CheckSingleLimit(int _size);
 
     private:
         OnPublishIssueCallback issued_callback_;

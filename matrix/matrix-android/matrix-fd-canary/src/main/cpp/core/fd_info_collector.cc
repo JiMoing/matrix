@@ -36,7 +36,7 @@ namespace fdcanary {
             InsertTypeMap(type, fd, stack);
         }
         GetMapsInfo();
-        if(issue_detector_.CheckLimit(fd)) {
+        if(issue_detector_.CheckAllLimit(fd)) {
             GetMapsInfo();
             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnPut Exceed the upper limit fd:[%d]", fd);
             std::vector<FDIssue> all_issue;
@@ -170,33 +170,33 @@ namespace fdcanary {
         switch (type) {
             case S_IFIFO: {
                 //命名管道
-                FDInfo fdinfo1(fd, FDIssueType::kFDPIPE, stack);
-                pipe_map_.insert(std::make_pair(fd, fdinfo1));
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (named pipe) | fd is [%d]]", fd);
+                InsertImpl(fd, FDIssueType::kFDPIPE, stack, pipe_map_);
+
                 break;
             }
                 
             case S_IFCHR: {
                 // 字符设备（串行端口）
-                FDInfo fdinfo2(fd, FDIssueType::kCharacterSpecial, stack);
-                character_special_map_.insert(std::make_pair(fd, fdinfo2));
+                
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (character special) | fd is [%d]]", fd);
+                InsertImpl(fd, FDIssueType::kCharacterSpecial, stack, character_special_map_);
                 break;
             }
                 
             case S_IFREG: {
                 //普通文件
-                FDInfo fdinfo3(fd, FDIssueType::kFDIO, stack);
-                io_map_.insert(std::make_pair(fd, fdinfo3));
+                
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (regular) | fd is [%d]]", fd);    
+                InsertImpl(fd, FDIssueType::kFDIO, stack, io_map_);
                 break;
             }
                 
             case S_IFSOCK: {
                 //socket 
-                FDInfo fdinfo4(fd, FDIssueType::kFDSocket, stack);
-                socket_map_.insert(std::make_pair(fd, fdinfo4));
+                
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (socket) | fd is [%d]]", fd);
+                InsertImpl(fd, FDIssueType::kFDIO, stack, socket_map_);
                 break;
             } 
             case S_IFDIR:
@@ -215,6 +215,23 @@ namespace fdcanary {
             default:
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "<unknown>");
                 break;
+        }
+    }
+
+    void FDInfoCollector::InsertImpl(int fd, FDIssueType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map) {
+        FDInfo fdinfo(fd, _fd_type, stack);
+        _map.insert(std::make_pair(fd, fdinfo));
+        int size = _map.size();
+        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertImpl fd:[%d], type:[%d], map size:[%d]", fd, _fd_type, size);
+        
+        if (issue_detector_.CheckSingleLimit(size)) {
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertImpl exceed the limit size:[%d]", size);
+            std::vector<FDIssue> all_issue;
+            for(std::unordered_map<int, FDInfo>::iterator iter = _map.begin(); iter != _map.end(); iter++) {
+                FDIssue issue(iter->second);
+                all_issue.push_back(issue);
+            }
+            issue_detector_.PublishIssue(all_issue);
         }
     }
 
