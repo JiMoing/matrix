@@ -19,6 +19,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include "comm/fd_common_info.h"
 
@@ -31,11 +32,17 @@ namespace fdcanary{
     };
 
     class QueryFD {
+
     private:
+
+        std::unordered_map<int , int> dump_counter_;
+
         const char* TypeToName(FDType type);
         FDType GetType(int mode, std::string &name);
 
         bool GetFDPath(int fd, char szbuf[1024]);
+
+        void DumpCounter();
 
     public:
         void QueryFDInfo(int _maxfd, std::vector<std::string> &_infos);

@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <comm/fd_common_info.h>
+#include <android/log.h>
 
 #endif
 
@@ -146,9 +147,23 @@ namespace fdcanary {
                                      item.type, TypeToName(item.type), item.path_or_name.c_str());
                 str.append(szline);
                 _infos.push_back(str);
+
+                dump_counter_[item.type]++;
             }
-
-
         }
+
+        DumpCounter();
+    }
+
+    void QueryFD::DumpCounter() {
+
+        auto iter = dump_counter_.begin();
+
+        for (auto iter = dump_counter_.begin(); iter != dump_counter_.end() ; iter++) {
+
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "QueryFD::DumpCounter key:[%d], value:[%d]",
+                                iter ->first, iter -> second);
+        }
+
     }
 }
