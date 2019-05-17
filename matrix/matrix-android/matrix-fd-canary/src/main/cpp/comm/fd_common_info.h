@@ -23,13 +23,29 @@
 namespace fdcanary {
 
     typedef enum {
-        kFD_IFREG = 1,//io
-        kFD_IFSOCK,//socket
-        kFD_IFIFO,//pipe
+
+        kFD_IFIFO = 1,//pipe
         kFD_IFCHR, //inputchannel（ashmem）
+        kFD_IFDIR,
+        kFD_IFBLK,
+        kFD_IFREG,//io
+        kFD_IFLNK,
+        kFD_IFSOCK,//socket
+
+        kFD_ANON_EVENT_FD,
+        kFD_ANON_EVENTPOLL,
+        kFD_ANON_SYNC_FENCE,
+        kFD_ANON_DMABUF,
+        kFD_ANON_INFINIBANDEVENT,
+        kFD_ANON_VFIO_DEVICE,
+        kFD_ANON_PERF_EVENT,
+
+        kFD_UN_KNOW,
 
     } FDType;
 
+
+    
 }
 
 

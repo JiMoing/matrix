@@ -20,17 +20,21 @@
 #include <string>
 #include <vector>
 
+#include "comm/fd_common_info.h"
+
 namespace fdcanary{
     struct FDI{
-        int fd;
-        int type;
-        int error;
+        int fd = 0;
+        int error = 0;
+        FDType type;
         std::string path_or_name;
     };
 
     class QueryFD {
     private:
-        const char* TypeToName(int type);
+        const char* TypeToName(FDType type);
+        FDType GetType(int mode, std::string &name);
+
         bool GetFDPath(int fd, char szbuf[1024]);
 
     public:
