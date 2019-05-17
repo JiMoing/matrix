@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-//
-// Author: liyongjie
-// Created by liyongjie
-//
 
 #ifndef MATRIX_FD_CANARY_FD_CANARY_UTILS_H
 #define MATRIX_FD_CANARY_FD_CANARY_UTILS_H

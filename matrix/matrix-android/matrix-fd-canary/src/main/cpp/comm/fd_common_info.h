@@ -14,28 +14,23 @@
  * limitations under the License.
  */
 
-#ifndef MATRIX_FD_CANARY_FD_DUMP_H
-#define MATRIX_FD_CANARY_FD_DUMP_H
 
-#include <string>
-#include <vector>
+#ifndef MATRIX_FD_CANARY_FD_COMMON_INFO_H
+#define MATRIX_FD_CANARY_FD_COMMON_INFO_H
 
-namespace fdcanary{
-    struct FDI{
-        int fd;
-        int type;
-        int error;
-        std::string path_or_name;
-    };
 
-    class QueryFD {
-    private:
-        const char* TypeToName(int type);
-        bool GetFDPath(int fd, char szbuf[1024]);
 
-    public:
-        void QueryFDInfo(int _maxfd, std::vector<std::string> &_infos);
-    };
+namespace fdcanary {
 
-};
-#endif //MATRIX_FD_CANARY_FD_DUMP_H
+    typedef enum {
+        kFD_IFREG = 1,//io
+        kFD_IFSOCK,//socket
+        kFD_IFIFO,//pipe
+        kFD_IFCHR, //inputchannel（ashmem）
+
+    } FDType;
+
+}
+
+
+#endif //MATRIX_FD_CANARY_FD_COMMON_INFO_H

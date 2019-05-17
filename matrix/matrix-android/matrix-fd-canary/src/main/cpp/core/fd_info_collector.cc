@@ -74,11 +74,11 @@ namespace fdcanary {
 
         
         char temp_size_2[50];
-        sprintf(temp_size_2, "character_special_map_:size: %zu ", character_special_map_.size());
+        sprintf(temp_size_2, "char_map_:size: %zu ", char_map_.size());
         str.append(temp_size_2);
-        if (character_special_map_.size() > 0) {
+        if (char_map_.size() > 0) {
             str.append("[");
-            for(std::unordered_map<int, FDInfo>::iterator iter = character_special_map_.begin(); iter != character_special_map_.end(); iter++) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = char_map_.begin(); iter != char_map_.end(); iter++) {
                 str.append(std::to_string(iter->first));
                 str.append(",");
             }
@@ -140,8 +140,8 @@ namespace fdcanary {
             }
         }
         
-        if (character_special_map_.size() > 0) {
-            for(std::unordered_map<int, FDInfo>::iterator iter = character_special_map_.begin(); iter != character_special_map_.end(); iter++) {
+        if (char_map_.size() > 0) {
+            for(std::unordered_map<int, FDInfo>::iterator iter = char_map_.begin(); iter != char_map_.end(); iter++) {
                 FDIssue issue(iter->second);
                 _all_issue.push_back(issue);
             }
@@ -172,7 +172,7 @@ namespace fdcanary {
             case S_IFIFO: {
                 //命名管道
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (named pipe) | fd is [%d]]", fd);
-                InsertImpl(fd, FDIssueType::kFDPIPE, stack, pipe_map_);
+                InsertImpl(fd, FDType::kFD_IFIFO, stack, pipe_map_);
 
                 break;
             }
@@ -181,7 +181,7 @@ namespace fdcanary {
                 // 字符设备（串行端口）
                 
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (character special) | fd is [%d]]", fd);
-                InsertImpl(fd, FDIssueType::kCharacterSpecial, stack, character_special_map_);
+                InsertImpl(fd, FDType::kFD_IFCHR, stack, char_map_);
                 break;
             }
                 
@@ -189,7 +189,7 @@ namespace fdcanary {
                 //普通文件
                 
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (regular) | fd is [%d]]", fd);    
-                InsertImpl(fd, FDIssueType::kFDIO, stack, io_map_);
+                InsertImpl(fd, FDType::kFD_IFREG, stack, io_map_);
                 break;
             }
                 
@@ -197,7 +197,7 @@ namespace fdcanary {
                 //socket 
                 
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (socket) | fd is [%d]]", fd);
-                InsertImpl(fd, FDIssueType::kFDIO, stack, socket_map_);
+                InsertImpl(fd, FDType::kFD_IFSOCK, stack, socket_map_);
                 break;
             } 
             case S_IFDIR:
@@ -219,7 +219,7 @@ namespace fdcanary {
         }
     }
 
-    void FDInfoCollector::InsertImpl(int fd, FDIssueType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map) {
+    void FDInfoCollector::InsertImpl(int fd, FDType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map) {
         FDInfo fdinfo(fd, _fd_type, stack);
         _map.insert(std::make_pair(fd, fdinfo));
         int size = _map.size();
@@ -245,7 +245,7 @@ namespace fdcanary {
                 break;
             case S_IFCHR:
                 // 字符设备（串行端口）
-                RemoveImpl(fd, character_special_map_);
+                RemoveImpl(fd, char_map_);
                 __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (character special) | fd is [%d]]", fd);
                 break;
             case S_IFREG:

@@ -18,7 +18,7 @@
 #endif
 
 namespace fdcanary {
-    bool QueryFD::get_fd_path(int fd, char szbuf[1024]){
+    bool QueryFD::GetFDPath(int fd, char szbuf[1024]){
 
     #ifdef __APPLE__
 
@@ -42,7 +42,7 @@ namespace fdcanary {
     }
 
 
-     const char* QueryFD::type2name(int type){
+    const char* QueryFD::TypeToName(int type){
         switch (type) {
             case S_IFIFO:
                 return "named pipe"; //命名管道
@@ -63,11 +63,9 @@ namespace fdcanary {
         }
     }
 
-    std::list<FDI> QueryFD::QueryFDInfo(int maxfd){
-        std::list<FDI> result;
-    #ifndef WIN32
+    void QueryFD::QueryFDInfo(int _maxfd, std::vector<std::string> &_infos){
         char szbuf[1024] = {0};
-        for (int fd = 0; fd < maxfd; fd++) {
+        for (int fd = 0; fd < _maxfd; fd++) {
             FDI item;
             item.fd = fd;
             
@@ -80,37 +78,18 @@ namespace fdcanary {
                 if (fstat(fd, &statbuf) == 0) {
                     item.type = (S_IFMT & statbuf.st_mode);
                     item.path_or_name = "<unknown>";
-                    if (get_fd_path(fd, szbuf)){
+                    if (GetFDPath(fd, szbuf)){
                         item.path_or_name = szbuf;
                     }
+
+                    std::string str;
+                    char szline[1024];
+                    size_t rv = snprintf(szline, 1024, "\r%d|%d|%d(%s)|%s", item.fd, item.error, item.type, TypeToName(item.type), item.path_or_name.c_str());
+                    str.append(szline, rv);
+                    _infos.push_back(str);
                 }
             }
             
-            result.push_back(item);
-        }
-    #endif
-        
-        return result;
-    }
-
-
-    std::list<std::string> QueryFD::PrettyFDInfo(const std::list<FDI>& fdi){
-        std::list<std::string> result;
-    #ifndef WIN32
-        char szline[1024];
-        std::string part;
-        for (auto item : fdi) {
-            part.clear();
-            if (item.error != 0) {
-                continue;
-            }
-            
-            size_t rv = snprintf(szline, 1024, "\r%d|%d|%d(%s)|%s", item.fd, item.error, item.type, type2name(item.type), item.path_or_name.c_str());
-            part.append(szline, rv);
-            result.push_back(part);
-        }
-    #endif
-        
-        return result;
+        }   
     }
 }

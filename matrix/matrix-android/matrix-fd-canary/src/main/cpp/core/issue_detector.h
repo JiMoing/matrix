@@ -21,14 +21,11 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+
+#include "comm/fd_common_info.h"
+
 namespace fdcanary {
-    typedef enum {
-        kFDIO = 1,//io
-        kFDSocket,//socket
-        kFDPIPE,//pipe
-        kFDDmabuf,//todo
-        kCharacterSpecial, //inputchannel（ashmem）
-    } FDIssueType ;
+    
 
     class JavaContext
     {
@@ -47,7 +44,7 @@ namespace fdcanary {
     class FDInfo
     {
     public:
-        FDInfo(const int _fd, const FDIssueType _fd_type, const std::string _stack)
+        FDInfo(const int _fd, const FDType _fd_type, const std::string _stack)
             : fd_(_fd), fd_type_(_fd_type), stack_(_stack)
         {
         }
@@ -56,7 +53,7 @@ namespace fdcanary {
         std::string stack_;
         //const JavaContext java_context_;
 
-        FDIssueType fd_type_;
+        FDType fd_type_;
     };
 
     class FDIssue {

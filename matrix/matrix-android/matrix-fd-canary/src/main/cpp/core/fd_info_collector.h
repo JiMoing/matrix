@@ -54,14 +54,14 @@ class FDInfoCollector
 
     std::unordered_map<int, FDInfo> dmabuf_map_;
 
-    std::unordered_map<int, FDInfo> character_special_map_;
+    std::unordered_map<int, FDInfo> char_map_;
 
     //std::vector<FDIssue> all_issue;
 
     int GetType(int fd);
 
     void InsertTypeMap(int type, int fd, std::string &stack);
-    void InsertImpl(int fd, FDIssueType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map);
+    void InsertImpl(int fd, FDType _fd_type, std::string &stack, std::unordered_map<int, FDInfo> &_map);
     void RemoveTypeMap(int type, int fd);
     void RemoveImpl(int fd, std::unordered_map<int, FDInfo> &map);
 

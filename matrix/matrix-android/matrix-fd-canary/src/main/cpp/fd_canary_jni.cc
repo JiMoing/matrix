@@ -359,10 +359,10 @@ extern "C"
         time(&t1);
        
         QueryFD fd_info;
-        std::list<FDI> list = fd_info.QueryFDInfo(1024);
-        std::list<std::string> result = fd_info.PrettyFDInfo(list);
-        for(auto s : result)
-        {
+        std::vector<std::string> infos;
+        fd_info.QueryFDInfo(1024, infos);
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "result size is [%zu]", infos.size());
+        for(auto s : infos) {
             __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "result is %s", s.c_str());
         }
          
