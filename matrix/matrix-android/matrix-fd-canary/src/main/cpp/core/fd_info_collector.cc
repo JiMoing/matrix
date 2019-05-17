@@ -158,6 +158,7 @@ namespace fdcanary {
             struct stat statbuf;
             if (fstat(fd, &statbuf) == 0) {
                 type = (S_IFMT & statbuf.st_mode);
+            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::GetType type:[%d]", type);
                 return type;
             }
         } else {
@@ -201,19 +202,19 @@ namespace fdcanary {
             } 
             case S_IFDIR:
                 //目录
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "directory");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (directory)");
                 break;
             case S_IFBLK:
                 //块设备（数据存储接口设备）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "block special");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(block special)");
                 break;
             case S_IFLNK:
                 //符号链接文件（文件的软连接文件，类似于window的快捷方式）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "symbolic link");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(symbolic link)");
                 break;
             
             default:
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "<unknown>");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(<unknown>)");
                 break;
         }
     }
@@ -261,19 +262,19 @@ namespace fdcanary {
                 
             case S_IFDIR:
                 //目录
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "directory");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (directory)");
                 break;
             case S_IFBLK:
                 //块设备（数据存储接口设备）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "block special");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (block special)");
                 break;
             case S_IFLNK:
                 //符号链接文件（文件的软连接文件，类似于window的快捷方式）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "symbolic link");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (symbolic link)");
                 break;
             
             default:
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "<unknown>");
+                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (<unknown>)");
                 break;
         }
     }

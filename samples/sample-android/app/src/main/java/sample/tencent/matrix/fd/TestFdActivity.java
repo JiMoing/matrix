@@ -211,27 +211,21 @@ public class TestFdActivity extends Activity {
     }
 
     private void testSocket() {
-        for (int i = 0; i < 1; i ++) {
+        for (int i = 0; i < 10; i ++) {
             Thread thread = new Thread() {
                 @Override
                 public void run() {
                     super.run();
                     Socket socket;
-                    try {// 创建一个Socket对象，并指定服务端的IP及端口号
-                        socket = new Socket("192.168.1.32", 1989);
-                        // 创建一个InputStream用户读取要发送的文件。
+                    try {
+                        socket = new Socket("192.168.1.1", 1989);
                         InputStream inputStream = new FileInputStream("e://a.txt");
-                        // 获取Socket的OutputStream对象用于发送数据。
                         OutputStream outputStream = socket.getOutputStream();
-                        // 创建一个byte类型的buffer字节数组，用于存放读取的本地文件
                         byte buffer[] = new byte[4 * 1024];
                         int temp = 0;
-                        // 循环读取文件
                         while ((temp = inputStream.read(buffer)) != -1) {
-                            // 把数据写入到OuputStream对象中
                             outputStream.write(buffer, 0, temp);
                         }
-                        // 发送读取的数据到服务端
                         outputStream.flush();
 
                     } catch (UnknownHostException e) {
