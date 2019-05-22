@@ -30,7 +30,6 @@ namespace fdcanary {
     }
 
     void FDInfoCollector::OnPut(int fd, std::string &stack) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnPut fd:[%d]", fd);
         int type = GetType(fd);
         if (type != -1) {
             InsertTypeMap(type, fd, stack);
@@ -47,7 +46,6 @@ namespace fdcanary {
 
 
     void FDInfoCollector::OnErase(int fd) {
-        __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::OnErase fd:[%d]", fd);
         int type = GetType(fd);
         if (type != -1) {
             RemoveTypeMap(type, fd);
@@ -158,7 +156,6 @@ namespace fdcanary {
             struct stat statbuf;
             if (fstat(fd, &statbuf) == 0) {
                 type = (S_IFMT & statbuf.st_mode);
-            __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI","FDInfoCollector::GetType type:[%d]", type);
                 return type;
             }
         } else {
@@ -171,7 +168,6 @@ namespace fdcanary {
         switch (type) {
             case S_IFIFO: {
                 //命名管道
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (named pipe) | fd is [%d]]", fd);
                 InsertImpl(fd, FDType::kFD_IFIFO, stack, pipe_map_);
 
                 break;
@@ -180,7 +176,6 @@ namespace fdcanary {
             case S_IFCHR: {
                 // 字符设备（串行端口）
                 
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (character special) | fd is [%d]]", fd);
                 InsertImpl(fd, FDType::kFD_IFCHR, stack, char_map_);
                 break;
             }
@@ -188,7 +183,6 @@ namespace fdcanary {
             case S_IFREG: {
                 //普通文件
                 
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (regular) | fd is [%d]]", fd);    
                 InsertImpl(fd, FDType::kFD_IFREG, stack, io_map_);
                 break;
             }
@@ -196,25 +190,20 @@ namespace fdcanary {
             case S_IFSOCK: {
                 //socket 
                 
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (socket) | fd is [%d]]", fd);
                 InsertImpl(fd, FDType::kFD_IFSOCK, stack, socket_map_);
                 break;
             } 
             case S_IFDIR:
                 //目录
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap (directory)");
                 break;
             case S_IFBLK:
                 //块设备（数据存储接口设备）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(block special)");
                 break;
             case S_IFLNK:
                 //符号链接文件（文件的软连接文件，类似于window的快捷方式）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(symbolic link)");
                 break;
             
             default:
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::InsertTypeMap(<unknown>)");
                 break;
         }
     }
@@ -241,40 +230,32 @@ namespace fdcanary {
             case S_IFIFO:
                 //命名管道
                 RemoveImpl(fd, pipe_map_);
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (named pipe) | fd is [%d]]", fd);
                 break;
             case S_IFCHR:
                 // 字符设备（串行端口）
                 RemoveImpl(fd, char_map_);
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (character special) | fd is [%d]]", fd);
                 break;
             case S_IFREG:
                 //普通文件
                 RemoveImpl(fd, io_map_);
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (regular) | fd is [%d]]", fd); 
                 break;   
             case S_IFSOCK:
                 //socket 
                 RemoveImpl(fd, socket_map_);
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (socket) | fd is [%d]]", fd);
                 break;
 
                 
             case S_IFDIR:
                 //目录
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (directory)");
                 break;
             case S_IFBLK:
                 //块设备（数据存储接口设备）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (block special)");
                 break;
             case S_IFLNK:
                 //符号链接文件（文件的软连接文件，类似于window的快捷方式）
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (symbolic link)");
                 break;
             
             default:
-                __android_log_print(ANDROID_LOG_DEBUG, "FDCanary.JNI", "FDInfoCollector::RemoveTypeMap (<unknown>)");
                 break;
         }
     }

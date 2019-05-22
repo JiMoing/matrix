@@ -44,6 +44,8 @@ namespace fdcanary
         void dumpBacktraceIndex(std::string &out, intptr_t *buffer, size_t count);
 
         void dumpCallStack(std::string &outBuf);
+
+        std::string backFunName(const char* name);
     };
     
 }

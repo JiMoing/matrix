@@ -15,6 +15,7 @@
  */
 #include "call_stack.h"
 #include <android/log.h>
+#include <cxxabi.h>
 namespace fdcanary {
 
     static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg)
@@ -59,7 +60,7 @@ namespace fdcanary {
                 }
                 if (info.dli_sname) {
                     single_str.append("(");
-                    single_str.append(info.dli_sname);
+                    single_str.append(backFunName(info.dli_sname));
                     single_str.append(")");
                 }    
             }
@@ -82,6 +83,25 @@ namespace fdcanary {
         const size_t maxStackDeep = 20;
         intptr_t stackBuf[maxStackDeep];
         dumpBacktraceIndex(outBuf, stackBuf, captureBacktrace(stackBuf, maxStackDeep));
+        
+    }
+
+    std::string CallStack::backFunName(const char* name) { 
+        char buffer[1024] = {0};      
+        size_t size = sizeof(buffer);      
+        int status;      
+        char *ret;
+        try {
+            ret =  abi::__cxa_demangle(name, buffer, &size, &status);
+            if(ret) {  
+                return std::string(ret);
+            } else {  
+                return name;
+            }  
+        } catch(...) {
+            return name;
+        }
+        return name;
         
     }
 }

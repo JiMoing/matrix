@@ -73,14 +73,8 @@ namespace fdcanary {
     }
 
     void FDCanary::dumpStack(std::string& stack) {
-        time_t t1;
-        time(&t1);
-        
         call_stack_.dumpCallStack(stack);
-        time_t t2;
-        time(&t2);
-        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "t1:[%ld], t2:[%ld], speed time:%ld",t1, t2, (t2-t1));
-        //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s, ", stack.c_str());    
+        __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "stack: %s, ", stack.c_str());
     }
 
 
