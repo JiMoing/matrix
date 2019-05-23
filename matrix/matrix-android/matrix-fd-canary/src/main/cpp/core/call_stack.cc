@@ -73,7 +73,7 @@ namespace fdcanary {
 
             out.append("\n");
             out.append(single_str);
-            //__android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
+            __android_log_print(ANDROID_LOG_WARN, "FDCanary.JNI", "%s", single_str.c_str()); 
             single_str = "";  
         }
     }
@@ -86,22 +86,22 @@ namespace fdcanary {
         
     }
 
-    std::string CallStack::backFunName(const char* name) { 
-        char buffer[1024] = {0};      
-        size_t size = sizeof(buffer);      
+    std::string CallStack::backFunName(const char* _fun_name) { 
+        char output_buffer[1024] = {0};      
+        size_t length = sizeof(output_buffer);      
         int status;      
         char *ret;
         try {
-            ret =  abi::__cxa_demangle(name, buffer, &size, &status);
+            ret =  abi::__cxa_demangle(_fun_name, output_buffer, &length, &status);
             if(ret) {  
                 return std::string(ret);
             } else {  
-                return name;
+                return _fun_name;
             }  
         } catch(...) {
-            return name;
+            return _fun_name;
         }
-        return name;
+        return _fun_name;
         
     }
 }
